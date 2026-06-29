@@ -1,12 +1,13 @@
 @php
-    if (! session()->has('contact_captcha_answer')) {
-        $left = random_int(2, 9);
-        $right = random_int(1, 9);
-        session([
-            'contact_captcha_question' => $left.' + '.$right,
-            'contact_captcha_answer' => $left + $right,
-        ]);
-    }
+    // Generate a new captcha on every full page reload.
+    // This prevents the same captcha from staying in the session across refreshes.
+    $left = random_int(2, 9);
+    $right = random_int(1, 9);
+
+    session([
+        'contact_captcha_question' => $left.' + '.$right,
+        'contact_captcha_answer' => $left + $right,
+    ]);
 @endphp
 <section class="contact-band" id="contact">
     <div class="container">
@@ -29,7 +30,7 @@
                 <label><span>Message *</span><textarea name="message" rows="5" required maxlength="5000" placeholder="Write your message here">{{ old('message') }}</textarea></label>
                 <div class="captcha-field">
                     <label><span>Captcha Value *</span><input type="text" value="{{ session('contact_captcha_question') }}" readonly tabindex="-1" aria-label="Captcha value" placeholder="Captcha value"></label>
-                    <label><span>Captcha Answer *</span><input type="number" name="captcha_answer" value="{{ old('captcha_answer') }}" required inputmode="numeric" placeholder="Enter captcha answer" autocomplete="off"></label>
+                    <label><span>Captcha Answer *</span><input type="number" name="captcha_answer" value="" required inputmode="numeric" placeholder="Enter captcha answer" autocomplete="off"></label>
                 </div>
                 <input class="honeypot" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
                 <button class="btn light" type="submit">Send Inquiry</button>
