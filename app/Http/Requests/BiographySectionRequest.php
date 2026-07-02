@@ -2,12 +2,15 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\HasFriendlyValidationMessages;
 use App\Rules\MeaningfulRichText;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class BiographySectionRequest extends FormRequest
 {
+    use HasFriendlyValidationMessages;
+
     public function authorize(): bool
     {
         return $this->user()?->is_admin === true;

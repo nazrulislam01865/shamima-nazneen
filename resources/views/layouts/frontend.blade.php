@@ -24,10 +24,16 @@
     @endif
 
     @if($errors->any())
-        <div class="site-flash site-flash-error" role="alert">
+        <div class="site-flash site-flash-error validation-summary" role="alert" data-error-summary>
             <strong>Please correct the highlighted information.</strong>
+            <p>Click an item below to go directly to the field that needs attention.</p>
             <ul>
-                @foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach
+                @foreach($errors->getMessages() as $field => $messages)
+                    @php $fieldId = preg_replace('/[^A-Za-z0-9_-]+/', '_', $field); @endphp
+                    @foreach($messages as $message)
+                        <li><a href="#{{ $fieldId }}" data-error-link data-error-field="{{ $field }}">{{ $message }}</a></li>
+                    @endforeach
+                @endforeach
             </ul>
         </div>
     @endif

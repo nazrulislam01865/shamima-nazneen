@@ -2,13 +2,14 @@
 
 namespace App\Http\Requests;
 
-use App\Rules\SafeUrl;
+use App\Http\Requests\Concerns\HasFriendlyValidationMessages;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\Validator;
 
 class WorkCategoryRequest extends FormRequest
 {
+    use HasFriendlyValidationMessages;
+
     public function authorize(): bool
     {
         return $this->user()?->is_admin === true;
@@ -16,17 +17,7 @@ class WorkCategoryRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        $links = collect($this->input('home_links', []))
-            ->map(fn ($link): array => [
-                'label' => trim((string) ($link['label'] ?? '')),
-                'url' => trim((string) ($link['url'] ?? '')),
-            ])
-            ->filter(fn (array $link): bool => $link['label'] !== '' || $link['url'] !== '')
-            ->values()
-            ->all();
-
         $this->merge([
-            'home_links' => $links,
             'show_on_home' => $this->boolean('show_on_home'),
             'is_active' => $this->boolean('is_active'),
             'remove_home_image' => $this->boolean('remove_home_image'),
@@ -44,30 +35,17 @@ class WorkCategoryRequest extends FormRequest
             'library_media_id' => ['nullable', Rule::exists('media_items', 'id')->where(fn ($query) => $query->where('type', 'image'))],
             'home_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'remove_home_image' => ['boolean'],
-            'home_links' => ['nullable', 'array', 'max:10'],
-            'home_links.*.label' => ['required_with:home_links.*.url', 'nullable', 'string', 'max:120'],
-            'home_links.*.url' => ['required_with:home_links.*.label', 'nullable', 'string', 'max:500', new SafeUrl],
             'show_on_home' => ['boolean'],
             'is_active' => ['boolean'],
         ];
     }
 
-    public function after(): array
+    public function messages(): array
     {
-        return [
-            function (Validator $validator): void {
-                $category = $this->route('work_category');
-                $existingImage = $category instanceof \App\Models\WorkCategory
-                    ? $category->home_image_path
-                    : null;
-
-                if ($this->boolean('show_on_home')
-                    && ! $this->hasFile('home_image')
-                    && ! $this->filled('library_media_id')
-                    && (blank($existingImage) || $this->boolean('remove_home_image'))) {
-                    $validator->errors()->add('home_image', 'Upload a home card image or choose one from Gallery / Media Library.');
-                }
-            },
-        ];
+        return $this->friendlyValidationMessages([
+            'home_image.image' => 'Please upload a valid card image.',
+            'home_image.mimes' => 'The card image must be a JPG, PNG, or WEBP file.',
+            'home_image.max' => 'The card image must be 5 MB or smaller.',
+        ]);
     }
 }

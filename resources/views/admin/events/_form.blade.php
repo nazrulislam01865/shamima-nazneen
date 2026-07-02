@@ -7,8 +7,8 @@
         <x-admin.input name="title" label="Event / appearance name" :value="$record?->title" required placeholder="Example: Television Interview or Cultural Programme" />
         <x-admin.input name="event_date" label="Event date" type="date" :value="$record?->event_date?->format('Y-m-d')" placeholder="YYYY-MM-DD" help="Choose the event date when it is known." />
         <div class="full"><x-admin.rich-text name="description" label="Description" :value="$record?->description" /></div>
-        <div class="full"><x-admin.media-library-select name="library_media_id" label="Choose event image from Gallery / Media Library" :current-path="$record?->image_path" /></div>
-        <div class="full"><x-admin.image-upload name="image" label="Or upload a new event image" :current="$record?->image_url" help="A new upload is automatically added to Gallery / Media Library." /></div>
+        <div class="full"><x-admin.media-library-select name="library_media_id" label="Choose event image from Image Gallery" :current-path="$record?->image_path" /></div>
+        <div class="full"><x-admin.image-upload name="image" label="Or upload a new event image" :current="$record?->image_url" help="A new upload is automatically added to Image Gallery." /></div>
     </div>
 </section>
 <section class="form-section">

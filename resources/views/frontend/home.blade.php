@@ -7,6 +7,10 @@
 @section('content')
 @php
     $social = $siteSettings->social_links ?? [];
+    $homeFollowLinks = collect($siteSettings->profile_card_links ?? [])
+        ->filter(fn ($link) => filled($link['title'] ?? null) && filled($link['url'] ?? null))
+        ->values();
+    $hasHomeFollowLinks = $homeFollowLinks->isNotEmpty() || collect($social)->filter()->isNotEmpty();
 @endphp
 <main id="home">
     <section class="hero" aria-label="Hero image slider">
@@ -39,14 +43,14 @@
         </div>
     </section>
 
-    @if(collect($social)->filter()->isNotEmpty())
+    @if($hasHomeFollowLinks)
         <div class="social-strip">
             <div class="container social-inner">
                 <strong class="social-title">
                     Follow {{ $siteSettings->site_name }}
                     <span>Stay connected and follow her journey</span>
                 </strong>
-                <div class="social-links">@include('frontend.partials.social-links')</div>
+                <div class="social-links">@include('frontend.partials.social-links', ['links' => $homeFollowLinks])</div>
             </div>
         </div>
     @endif

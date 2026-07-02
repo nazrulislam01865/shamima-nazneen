@@ -36,6 +36,11 @@ class ContactInquiryController extends Controller
     {
         $data = request()->validate([
             'status' => ['required', Rule::in(['new', 'read', 'replied', 'closed'])],
+        ], [
+            'status.required' => 'Choose the inquiry status.',
+            'status.in' => 'Choose a valid inquiry status.',
+        ], [
+            'status' => 'inquiry status',
         ]);
 
         $inquiry->update($data + ['read_at' => $inquiry->read_at ?: now()]);

@@ -2,11 +2,14 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\HasFriendlyValidationMessages;
 use App\Rules\SafeUrl;
 use Illuminate\Foundation\Http\FormRequest;
 
 class TestimonialRequest extends FormRequest
 {
+    use HasFriendlyValidationMessages;
+
     public function authorize(): bool
     {
         return $this->user()?->is_admin === true;

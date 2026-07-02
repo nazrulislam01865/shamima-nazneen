@@ -2,12 +2,15 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\HasFriendlyValidationMessages;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
 class AdminAccountRequest extends FormRequest
 {
+    use HasFriendlyValidationMessages;
+
     public function authorize(): bool
     {
         return $this->user()?->is_admin === true;

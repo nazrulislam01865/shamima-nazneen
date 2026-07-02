@@ -24,9 +24,17 @@
         </div>
 
         @if($errors->any())
-            <div class="admin-alert error" role="alert">
+            <div class="admin-alert error validation-summary" role="alert" data-error-summary>
                 <strong>Login failed.</strong>
-                <ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+                <p>Click an item below to go directly to the field that needs attention.</p>
+                <ul>
+                    @foreach($errors->getMessages() as $field => $messages)
+                        @php $fieldId = preg_replace('/[^A-Za-z0-9_-]+/', '_', $field); @endphp
+                        @foreach($messages as $message)
+                            <li><a href="#{{ $fieldId }}" data-error-link data-error-field="{{ $field }}">{{ $message }}</a></li>
+                        @endforeach
+                    @endforeach
+                </ul>
             </div>
         @endif
 
@@ -39,5 +47,6 @@
         </form>
         <p class="login-footer"><a href="{{ route('home') }}">← Return to public website</a></p>
     </main>
+    <script src="{{ asset('assets/js/admin.js') }}" defer></script>
 </body>
 </html>

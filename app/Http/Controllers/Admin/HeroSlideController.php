@@ -43,7 +43,7 @@ class HeroSlideController extends Controller
         $data['sort_order'] = ((int) HeroSlide::query()->max('sort_order')) + 10;
         HeroSlide::query()->create($data);
 
-        return redirect()->route('admin.hero-slides.index')->with('success', 'Hero slide created successfully. The image is also available in Gallery / Media Library.');
+        return redirect()->route('admin.hero-slides.index')->with('success', 'Hero slide created successfully. The image is also available in Image Gallery.');
     }
 
     public function edit(HeroSlide $heroSlide): View

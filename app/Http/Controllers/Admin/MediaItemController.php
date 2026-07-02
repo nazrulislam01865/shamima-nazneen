@@ -17,7 +17,9 @@ class MediaItemController extends Controller
 
     public function index(): View
     {
-        return $this->renderIndex();
+        $type = in_array(request('type'), ['image', 'video'], true) ? request('type') : 'image';
+
+        return $this->renderIndex($type);
     }
 
     public function images(): View
@@ -30,10 +32,13 @@ class MediaItemController extends Controller
         return $this->renderIndex('video');
     }
 
-    private function renderIndex(?string $forcedType = null): View
+    private function renderIndex(string $forcedType): View
     {
-        $type = $forcedType ?: (in_array(request('type'), ['image', 'video'], true) ? request('type') : null);
-        $query = MediaItem::query()->orderBy('sort_order')->orderByDesc('year');
+        $type = $forcedType === 'video' ? 'video' : 'image';
+        $query = MediaItem::query()
+            ->where('type', $type)
+            ->orderBy('sort_order')
+            ->orderByDesc('year');
 
         if (request()->boolean('home')) {
             $query->where('show_on_home', true);
@@ -45,10 +50,6 @@ class MediaItemController extends Controller
 
         if (request()->boolean('gallery')) {
             $query->where('show_in_gallery', true);
-        }
-
-        if ($type) {
-            $query->where('type', $type);
         }
 
         if (request('search')) {
@@ -85,6 +86,7 @@ class MediaItemController extends Controller
     {
         $data = $request->safe()->except(['image', 'remove_image']);
         $data['description'] = RichTextSanitizer::clean($data['description'] ?? null);
+        $data['type'] = $data['type'] === 'video' ? 'video' : 'image';
         $data['image_path'] = $data['type'] === 'image'
             ? $this->storeUploadedFile($request->file('image'), 'media')
             : null;
@@ -93,15 +95,17 @@ class MediaItemController extends Controller
             $data['youtube_url'] = null;
         } else {
             $data['youtube_url'] = YouTube::watchUrl($data['youtube_url'] ?? null);
+            $data['alt_text'] = null;
+            $data['fallback_text'] = null;
         }
 
-        $data['sort_order'] = ((int) MediaItem::query()->max('sort_order')) + 10;
+        $data['sort_order'] = ((int) MediaItem::query()->where('type', $data['type'])->max('sort_order')) + 10;
 
         MediaItem::query()->create($data);
 
         return redirect()
             ->route('admin.media-items.index', $this->contextQuery($request, $data['type']))
-            ->with('success', 'Media library item created successfully.');
+            ->with('success', ucfirst($data['type']).' gallery item created successfully.');
     }
 
     public function edit(MediaItem $mediaItem): View
@@ -113,10 +117,14 @@ class MediaItemController extends Controller
     {
         $data = $request->safe()->except(['image', 'remove_image']);
         $data['description'] = RichTextSanitizer::clean($data['description'] ?? null);
+        $data['type'] = $mediaItem->type === 'video' ? 'video' : 'image';
+
         if ($data['type'] === 'video') {
             $oldPath = $mediaItem->image_path;
             $data['image_path'] = null;
             $data['youtube_url'] = YouTube::watchUrl($request->input('youtube_url'));
+            $data['alt_text'] = null;
+            $data['fallback_text'] = null;
             $mediaItem->update($data);
             $this->deleteStoredFile($oldPath);
         } else {
@@ -128,7 +136,7 @@ class MediaItemController extends Controller
 
         return redirect()
             ->route('admin.media-items.index', $this->contextQuery($request, $data['type']))
-            ->with('success', 'Media library item updated successfully.');
+            ->with('success', ucfirst($data['type']).' gallery item updated successfully.');
     }
 
     public function destroy(MediaItem $mediaItem): RedirectResponse
@@ -137,7 +145,7 @@ class MediaItemController extends Controller
         $mediaItem->delete();
         $this->deleteStoredFile($path);
 
-        return back()->with('success', 'Media library item deleted successfully.');
+        return back()->with('success', ucfirst($mediaItem->type).' gallery item deleted successfully.');
     }
 
     /**
@@ -145,7 +153,7 @@ class MediaItemController extends Controller
      */
     private function contextQuery(MediaItemRequest $request, string $type): array
     {
-        $query = ['type' => $type];
+        $query = ['type' => $type === 'video' ? 'video' : 'image'];
 
         if ($request->boolean('home') || request()->boolean('home')) {
             $query['home'] = 1;

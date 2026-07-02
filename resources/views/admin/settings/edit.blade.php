@@ -16,10 +16,10 @@
         <div class="form-grid">
             <x-admin.input name="site_name" label="Website name" :value="$settings->site_name" required placeholder="Example: Shamima Nazneen" />
             <x-admin.input name="tagline" label="Professional tagline" :value="$settings->tagline" placeholder="Example: Actress, director, and theatre personality" />
-            <div class="full"><x-admin.media-library-select name="logo_media_id" label="Choose logo from Gallery / Media Library" :current-path="$settings->logo_path" /></div>
-            <div class="full"><x-admin.image-upload name="logo" label="Or upload a new website logo" :current="$settings->logo_url" remove-name="remove_logo" help="PNG, JPG, or WEBP. A new upload is automatically added to Gallery / Media Library." /></div>
-            <div class="full"><x-admin.media-library-select name="favicon_media_id" label="Choose favicon from Gallery / Media Library" :current-path="$settings->favicon_path" /></div>
-            <div class="full"><x-admin.image-upload name="favicon" label="Or upload a new browser favicon" :current="$settings->favicon_url" remove-name="remove_favicon" help="PNG, ICO, WEBP, or JPG. A new upload is automatically added to Gallery / Media Library." /></div>
+            <div class="full"><x-admin.media-library-select name="logo_media_id" label="Choose logo from Image Gallery" :current-path="$settings->logo_path" /></div>
+            <div class="full"><x-admin.image-upload name="logo" label="Or upload a new website logo" :current="$settings->logo_url" remove-name="remove_logo" help="PNG, JPG, or WEBP. A new upload is automatically added to Image Gallery." /></div>
+            <div class="full"><x-admin.media-library-select name="favicon_media_id" label="Choose favicon from Image Gallery" :current-path="$settings->favicon_path" /></div>
+            <div class="full"><x-admin.image-upload name="favicon" label="Or upload a new browser favicon" :current="$settings->favicon_url" remove-name="remove_favicon" help="PNG, ICO, WEBP, or JPG. A new upload is automatically added to Image Gallery." /></div>
         </div>
     </section>
 
@@ -39,33 +39,69 @@
     @php
         $profileCardLinks = old('profile_card_links', $settings->profile_card_links ?? []);
         if (blank($profileCardLinks)) {
-            $profileCardLinks = [['title' => '', 'url' => '', 'description' => '']];
+            $profileCardLinks = [['title' => '', 'url' => '', 'description' => '', 'icon_path' => '']];
         }
+        $profileCardNextIndex = collect(array_keys((array) $profileCardLinks))
+            ->filter(fn ($key) => is_numeric($key))
+            ->map(fn ($key) => (int) $key)
+            ->max();
+        $profileCardNextIndex = is_null($profileCardNextIndex) ? count($profileCardLinks) : $profileCardNextIndex + 1;
     @endphp
     <section class="form-section" id="profiles-media-links">
         <div class="form-section-heading">
             <h2>Profiles and media card links</h2>
-            <p>Add as many homepage profile or media links as needed. Each saved item becomes a separate clickable card.</p>
+            <p>Add as many homepage profile or media links as needed. Upload a custom logo for each link, or leave it empty to use the automatic logo.</p>
         </div>
 
-        <div class="repeatable-list" data-repeatable-links data-repeatable-name="profile_card_links" data-next-index="{{ count($profileCardLinks) }}">
+        <div class="repeatable-list" data-repeatable-links data-repeatable-name="profile_card_links" data-next-index="{{ $profileCardNextIndex }}">
             <div class="repeatable-list-rows" data-repeatable-rows>
                 @foreach($profileCardLinks as $index => $profileLink)
+                    @php
+                        $iconPath = $profileLink['icon_path'] ?? $profileLink['current_icon_path'] ?? null;
+                        $iconUrl = \App\Support\Media::url($iconPath);
+                        $titleErrorKey = "profile_card_links.$index.title";
+                        $urlErrorKey = "profile_card_links.$index.url";
+                        $iconErrorKey = "profile_card_links.$index.icon";
+                        $currentIconErrorKey = "profile_card_links.$index.current_icon_path";
+                        $descriptionErrorKey = "profile_card_links.$index.description";
+                    @endphp
                     <div class="repeatable-link-row profile-card-link-row" data-repeatable-row>
-                        <div class="form-field">
+                        <div class="form-field {{ $errors->has($titleErrorKey) ? 'has-error' : '' }}" data-field-wrapper data-field-name="{{ $titleErrorKey }}">
                             <label for="profile_card_links_{{ $index }}_title">Card name</label>
-                            <input id="profile_card_links_{{ $index }}_title" name="profile_card_links[{{ $index }}][title]" type="text" value="{{ $profileLink['title'] ?? '' }}" maxlength="120">
-                            @error("profile_card_links.$index.title")<small class="field-error">{{ $message }}</small>@enderror
+                            <input id="profile_card_links_{{ $index }}_title" name="profile_card_links[{{ $index }}][title]" type="text" value="{{ $profileLink['title'] ?? '' }}" maxlength="120" @if($errors->has($titleErrorKey)) aria-invalid="true" aria-describedby="profile_card_links_{{ $index }}_title_error" @endif>
+                            @error($titleErrorKey)<small id="profile_card_links_{{ $index }}_title_error" class="field-error">{{ $message }}</small>@enderror
                         </div>
-                        <div class="form-field">
+                        <div class="form-field {{ $errors->has($urlErrorKey) ? 'has-error' : '' }}" data-field-wrapper data-field-name="{{ $urlErrorKey }}">
                             <label for="profile_card_links_{{ $index }}_url">Link URL</label>
-                            <input id="profile_card_links_{{ $index }}_url" name="profile_card_links[{{ $index }}][url]" type="text" value="{{ $profileLink['url'] ?? '' }}" maxlength="500">
-                            @error("profile_card_links.$index.url")<small class="field-error">{{ $message }}</small>@enderror
+                            <input id="profile_card_links_{{ $index }}_url" name="profile_card_links[{{ $index }}][url]" type="text" value="{{ $profileLink['url'] ?? '' }}" maxlength="500" @if($errors->has($urlErrorKey)) aria-invalid="true" aria-describedby="profile_card_links_{{ $index }}_url_error" @endif>
+                            @error($urlErrorKey)<small id="profile_card_links_{{ $index }}_url_error" class="field-error">{{ $message }}</small>@enderror
                         </div>
-                        <div class="form-field profile-card-description-field">
+                        <div class="form-field profile-card-logo-field {{ ($errors->has($iconErrorKey) || $errors->has($currentIconErrorKey)) ? 'has-error' : '' }}" data-image-upload data-field-wrapper data-field-name="{{ $iconErrorKey }}">
+                            <label for="profile_card_links_{{ $index }}_icon">Logo image</label>
+                            <input type="hidden" name="profile_card_links[{{ $index }}][current_icon_path]" value="{{ $iconPath }}">
+                            <div class="profile-card-logo-upload">
+                                <div class="profile-card-logo-preview {{ $iconUrl ? 'has-image' : '' }}" data-image-preview>
+                                    @if($iconUrl)
+                                        <img src="{{ $iconUrl }}" alt="{{ ($profileLink['title'] ?? 'Profile') }} logo" data-fallback-text="Profile logo is not available.">
+                                    @else
+                                        <span>Auto logo will be used</span>
+                                    @endif
+                                </div>
+                                <div class="profile-card-logo-actions">
+                                    <input id="profile_card_links_{{ $index }}_icon" name="profile_card_links[{{ $index }}][icon]" type="file" accept="image/png,image/jpeg,image/webp" data-image-input @if($errors->has($iconErrorKey) || $errors->has($currentIconErrorKey)) aria-invalid="true" aria-describedby="profile_card_links_{{ $index }}_icon_error" @endif>
+                                    @if($iconPath)
+                                        <label class="remove-file"><input type="checkbox" name="profile_card_links[{{ $index }}][remove_icon]" value="1"> Remove custom logo and use auto logo</label>
+                                    @endif
+                                    <small>Optional. Upload a square PNG, JPG, or WEBP logo. If empty, the website will use the automatic logo.</small>
+                                    @error($iconErrorKey)<small id="profile_card_links_{{ $index }}_icon_error" class="field-error">{{ $message }}</small>@enderror
+                                    @error($currentIconErrorKey)<small class="field-error">{{ $message }}</small>@enderror
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-field profile-card-description-field {{ $errors->has($descriptionErrorKey) ? 'has-error' : '' }}" data-field-wrapper data-field-name="{{ $descriptionErrorKey }}">
                             <label for="profile_card_links_{{ $index }}_description">Card description</label>
-                            <textarea id="profile_card_links_{{ $index }}_description" name="profile_card_links[{{ $index }}][description]" rows="3" maxlength="500">{{ $profileLink['description'] ?? '' }}</textarea>
-                            @error("profile_card_links.$index.description")<small class="field-error">{{ $message }}</small>@enderror
+                            <textarea id="profile_card_links_{{ $index }}_description" name="profile_card_links[{{ $index }}][description]" rows="3" maxlength="500" @if($errors->has($descriptionErrorKey)) aria-invalid="true" aria-describedby="profile_card_links_{{ $index }}_description_error" @endif>{{ $profileLink['description'] ?? '' }}</textarea>
+                            @error($descriptionErrorKey)<small id="profile_card_links_{{ $index }}_description_error" class="field-error">{{ $message }}</small>@enderror
                         </div>
                         <button class="admin-button danger small repeatable-remove" type="button" data-repeatable-remove>Remove</button>
                     </div>
@@ -83,6 +119,17 @@
                     <div class="form-field">
                         <label>Link URL</label>
                         <input data-field="url" type="text" maxlength="500">
+                    </div>
+                    <div class="form-field profile-card-logo-field" data-image-upload>
+                        <label>Logo image</label>
+                        <input data-field="current_icon_path" type="hidden" value="">
+                        <div class="profile-card-logo-upload">
+                            <div class="profile-card-logo-preview" data-image-preview><span>Auto logo will be used</span></div>
+                            <div class="profile-card-logo-actions">
+                                <input data-field="icon" type="file" accept="image/png,image/jpeg,image/webp" data-image-input>
+                                <small>Optional. Upload a square PNG, JPG, or WEBP logo. If empty, the website will use the automatic logo.</small>
+                            </div>
+                        </div>
                     </div>
                     <div class="form-field profile-card-description-field">
                         <label>Card description</label>

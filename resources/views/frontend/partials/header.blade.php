@@ -1,18 +1,23 @@
 @php
     $home = route('home');
     $social = $siteSettings->social_links ?? [];
+    $headerFollowLinks = collect($siteSettings->profile_card_links ?? [])
+        ->filter(fn ($link) => filled($link['title'] ?? null) && filled($link['url'] ?? null))
+        ->values();
+    $hasFollowLinks = $headerFollowLinks->isNotEmpty() || collect($social)->filter()->isNotEmpty();
+    $hasLogo = filled($siteSettings->logo_url);
 @endphp
 <header class="topbar">
     <div class="container nav">
-        <a class="brand" href="{{ $home }}" aria-label="{{ $siteSettings->site_name }} home">
-            <span class="brand-mark">
-                @if($siteSettings->logo_url)
-                    <img src="{{ $siteSettings->logo_url }}" alt="{{ $siteSettings->site_name }} logo">
-                @else
+        <a class="brand {{ $hasLogo ? 'brand-logo-only' : '' }}" href="{{ $home }}" aria-label="{{ $siteSettings->site_name }} home">
+            @if($hasLogo)
+                <img class="site-logo-img" src="{{ $siteSettings->logo_url }}" alt="{{ $siteSettings->site_name }} logo">
+            @else
+                <span class="brand-mark">
                     {{ mb_substr($siteSettings->site_name ?: 'S', 0, 1) }}
-                @endif
-            </span>
-            <span>{{ $siteSettings->site_name }}</span>
+                </span>
+                <span class="brand-name">{{ $siteSettings->site_name }}</span>
+            @endif
         </a>
 
         <button class="mobile-nav-toggle" type="button" aria-expanded="false" aria-controls="mainNavigation" aria-label="Open navigation">
@@ -20,13 +25,9 @@
         </button>
 
         <nav id="mainNavigation" class="navlinks" aria-label="Main navigation">
-            <div class="mobile-nav-panel-brand">
+            <div class="mobile-nav-panel-brand" aria-hidden="true">
                 <span class="brand-mark small">
-                    @if($siteSettings->logo_url)
-                        <img src="{{ $siteSettings->logo_url }}" alt="{{ $siteSettings->site_name }} logo">
-                    @else
-                        {{ mb_substr($siteSettings->site_name ?: 'S', 0, 1) }}
-                    @endif
+                    {{ mb_substr($siteSettings->site_name ?: 'S', 0, 1) }}
                 </span>
                 <strong>{{ $siteSettings->site_name }}</strong>
             </div>
@@ -34,37 +35,29 @@
             <div class="navlinks-main">
                 @forelse($headerMenuItems as $menuItem)
                     <a class="nav-menu-link" href="{{ $menuItem->public_url }}" @if($menuItem->open_new_tab) target="_blank" rel="noopener noreferrer" @endif>
-                        <span class="nav-link-icon" aria-hidden="true">
-                            @if($menuItem->icon_url)
-                                <img src="{{ $menuItem->icon_url }}" alt="">
-                            @else
-                                @include('frontend.partials.menu-icon', ['icon' => $menuItem->icon_key])
-                            @endif
-                        </span>
                         <span>{{ $menuItem->label }}</span>
                     </a>
                 @empty
-                    <a class="nav-menu-link" href="{{ $home }}#about"><span class="nav-link-icon" aria-hidden="true">@include('frontend.partials.menu-icon', ['icon' => 'user'])</span><span>About</span></a>
-                    <a class="nav-menu-link" href="{{ route('biography.index') }}"><span class="nav-link-icon" aria-hidden="true">@include('frontend.partials.menu-icon', ['icon' => 'book'])</span><span>Biography</span></a>
-                    <a class="nav-menu-link" href="{{ route('works.index') }}"><span class="nav-link-icon" aria-hidden="true">@include('frontend.partials.menu-icon', ['icon' => 'briefcase'])</span><span>Works</span></a>
-                    <a class="nav-menu-link" href="{{ route('works.index', ['category' => 'films']) }}"><span class="nav-link-icon" aria-hidden="true">@include('frontend.partials.menu-icon', ['icon' => 'clapper'])</span><span>Films</span></a>
-                    <a class="nav-menu-link" href="{{ route('videos.index') }}"><span class="nav-link-icon" aria-hidden="true">@include('frontend.partials.menu-icon', ['icon' => 'video'])</span><span>Videos</span></a>
-                    <a class="nav-menu-link" href="{{ route('gallery.index') }}"><span class="nav-link-icon" aria-hidden="true">@include('frontend.partials.menu-icon', ['icon' => 'image'])</span><span>Gallery</span></a>
-                    <a class="nav-menu-link" href="{{ $home }}#contact"><span class="nav-link-icon" aria-hidden="true">@include('frontend.partials.menu-icon', ['icon' => 'mail'])</span><span>Contact</span></a>
+                    <a class="nav-menu-link" href="{{ $home }}#about"><span>About</span></a>
+                    <a class="nav-menu-link" href="{{ route('biography.index') }}"><span>Biography</span></a>
+                    <a class="nav-menu-link" href="{{ route('works.index') }}"><span>Works</span></a>
+                    <a class="nav-menu-link" href="{{ route('works.index', ['category' => 'films']) }}"><span>Films</span></a>
+                    <a class="nav-menu-link" href="{{ route('videos.index') }}"><span>Videos</span></a>
+                    <a class="nav-menu-link" href="{{ route('gallery.index') }}"><span>Gallery</span></a>
+                    <a class="nav-menu-link" href="{{ $home }}#contact"><span>Contact</span></a>
                 @endforelse
                 @foreach($headerCustomPages as $customMenuPage)
                     <a class="nav-menu-link" href="{{ route('pages.show', $customMenuPage) }}">
-                        <span class="nav-link-icon" aria-hidden="true">@include('frontend.partials.menu-icon', ['icon' => 'link'])</span>
                         <span>{{ $customMenuPage->name }}</span>
                     </a>
                 @endforeach
             </div>
 
-            @if(collect($social)->filter()->isNotEmpty())
+            @if($hasFollowLinks)
                 <div class="mobile-nav-follow">
                     <span>Follow</span>
                     <div class="mobile-nav-follow-grid">
-                        @include('frontend.partials.social-links', ['compact' => true])
+                        @include('frontend.partials.social-links', ['links' => $headerFollowLinks, 'compact' => true])
                     </div>
                 </div>
             @endif

@@ -9,7 +9,7 @@
 
 <div class="stats-grid">
     <article class="stat-card"><span>Total works</span><strong>{{ $stats['works'] }}</strong><a href="{{ route('admin.works.index') }}">Manage works →</a></article>
-    <article class="stat-card"><span>Gallery images</span><strong>{{ $stats['images'] }}</strong><a href="{{ route('admin.media-items.index', ['type' => 'image']) }}">Manage images →</a></article>
+    <article class="stat-card"><span>Image gallery</span><strong>{{ $stats['images'] }}</strong><a href="{{ route('admin.gallery-media.images') }}">Manage images →</a></article>
     <article class="stat-card"><span>YouTube videos</span><strong>{{ $stats['videos'] }}</strong><a href="{{ route('admin.gallery-media.videos') }}">Manage videos →</a></article>
     <article class="stat-card"><span>Events</span><strong>{{ $stats['events'] }}</strong><a href="{{ route('admin.events.index') }}">Manage events →</a></article>
     <article class="stat-card"><span>Custom pages</span><strong>{{ $stats['custom_pages'] }}</strong><a href="{{ route('admin.custom-pages.index') }}">Manage pages →</a></article>

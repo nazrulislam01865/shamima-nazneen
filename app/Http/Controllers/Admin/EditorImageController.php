@@ -15,6 +15,13 @@ class EditorImageController extends Controller
     {
         $validated = $request->validate([
             'image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:8192'],
+        ], [
+            'image.required' => 'Choose an image before uploading.',
+            'image.image' => 'Upload a valid JPG, PNG, or WEBP image.',
+            'image.mimes' => 'Upload a JPG, PNG, or WEBP image.',
+            'image.max' => 'The image must be 8 MB or smaller.',
+        ], [
+            'image' => 'image',
         ]);
 
         $file = $validated['image'];

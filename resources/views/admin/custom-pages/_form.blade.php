@@ -15,13 +15,6 @@
             placeholder="Example: Privacy Policy, Press Kit, or Awards"
             help="This name is used as the public page heading and menu label."
         />
-        <x-admin.input
-            name="slug"
-            label="Page URL name"
-            :value="$record?->slug"
-            placeholder="Example: privacy-policy"
-            help="Optional. Leave empty to generate it automatically from the page name."
-        />
         <div class="full">
             <x-admin.rich-text
                 name="content"

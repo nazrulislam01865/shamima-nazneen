@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\HasFriendlyValidationMessages;
 use App\Models\CustomPage;
 use App\Rules\MeaningfulRichText;
 use Illuminate\Foundation\Http\FormRequest;
@@ -9,6 +10,8 @@ use Illuminate\Validation\Rule;
 
 class CustomPageRequest extends FormRequest
 {
+    use HasFriendlyValidationMessages;
+
     public function authorize(): bool
     {
         return $this->user()?->is_admin === true;
@@ -46,8 +49,8 @@ class CustomPageRequest extends FormRequest
 
     public function messages(): array
     {
-        return [
+        return $this->friendlyValidationMessages([
             'slug.regex' => 'The page URL name may contain lowercase letters, numbers, and hyphens only.',
-        ];
+        ]);
     }
 }

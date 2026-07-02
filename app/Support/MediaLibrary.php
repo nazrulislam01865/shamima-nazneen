@@ -10,13 +10,31 @@ final class MediaLibrary
     /**
      * @return Collection<int, MediaItem>
      */
-    public static function images(): Collection
+    public static function items(string $type = 'image'): Collection
     {
+        $type = $type === 'video' ? 'video' : 'image';
+
         return MediaItem::query()
-            ->where('type', 'image')
+            ->where('type', $type)
             ->orderBy('title')
             ->orderByDesc('year')
             ->get();
+    }
+
+    /**
+     * @return Collection<int, MediaItem>
+     */
+    public static function images(): Collection
+    {
+        return self::items('image');
+    }
+
+    /**
+     * @return Collection<int, MediaItem>
+     */
+    public static function videos(): Collection
+    {
+        return self::items('video');
     }
 
     public static function imagePath(?int $mediaItemId): ?string
@@ -31,6 +49,18 @@ final class MediaLibrary
             ->value('image_path');
     }
 
+    public static function videoUrl(?int $mediaItemId): ?string
+    {
+        if (! $mediaItemId) {
+            return null;
+        }
+
+        return MediaItem::query()
+            ->whereKey($mediaItemId)
+            ->where('type', 'video')
+            ->value('youtube_url');
+    }
+
     public static function imageIdForPath(?string $path): ?int
     {
         if (blank($path)) {
@@ -40,6 +70,20 @@ final class MediaLibrary
         return MediaItem::query()
             ->where('type', 'image')
             ->where('image_path', $path)
+            ->value('id');
+    }
+
+    public static function videoIdForUrl(?string $url): ?int
+    {
+        $watchUrl = YouTube::watchUrl($url);
+
+        if (! $watchUrl) {
+            return null;
+        }
+
+        return MediaItem::query()
+            ->where('type', 'video')
+            ->where('youtube_url', $watchUrl)
             ->value('id');
     }
 

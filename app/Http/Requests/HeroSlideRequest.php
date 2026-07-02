@@ -2,12 +2,15 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\HasFriendlyValidationMessages;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class HeroSlideRequest extends FormRequest
 {
+    use HasFriendlyValidationMessages;
+
     public function authorize(): bool
     {
         return $this->user()?->is_admin === true;
@@ -47,7 +50,7 @@ class HeroSlideRequest extends FormRequest
                 $existingImage = $slide instanceof \App\Models\HeroSlide ? $slide->image_path : null;
 
                 if (! $this->hasFile('image') && ! $this->filled('library_media_id') && (blank($existingImage) || $this->boolean('remove_image'))) {
-                    $validator->errors()->add('image', 'Upload a hero image or choose one from Gallery / Media Library.');
+                    $validator->errors()->add('image', 'Upload a hero image or choose one from Image Gallery.');
                 }
             },
         ];

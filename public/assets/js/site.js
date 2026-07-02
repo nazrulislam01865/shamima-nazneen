@@ -4,6 +4,151 @@
   const body = document.body;
   const defaultImageFallback = body.dataset.imageFallbackText || 'Image is not available.';
 
+  const cssEscape = (value) => {
+    if (window.CSS?.escape) return window.CSS.escape(String(value));
+    return String(value).replace(/[^a-zA-Z0-9_-]/g, '\\$&');
+  };
+
+  const errorFieldId = (name) => String(name || '').replace(/[^A-Za-z0-9_-]+/g, '_');
+
+  const dottedNameToInputName = (name) => {
+    const parts = String(name || '').split('.').filter(Boolean);
+    if (parts.length <= 1) return String(name || '');
+    return `${parts.shift()}${parts.map((part) => `[${part}]`).join('')}`;
+  };
+
+  const fieldLabel = (wrapper, field) => {
+    const label = wrapper?.querySelector('span, label')?.textContent || field?.getAttribute('aria-label') || field?.name || 'This field';
+    return label.replace('*', '').replace(/\s+/g, ' ').trim() || 'This field';
+  };
+
+  const friendlyValidityMessage = (field, wrapper) => {
+    const label = fieldLabel(wrapper, field);
+    const lowerLabel = label.charAt(0).toLowerCase() + label.slice(1);
+    const validity = field.validity;
+    if (validity.valueMissing) return `${label} is required.`;
+    if (validity.typeMismatch && field.type === 'email') return 'Enter a valid email address.';
+    if (validity.typeMismatch && field.type === 'url') return `Enter a valid link for ${lowerLabel}.`;
+    if (validity.tooShort) return `${label} is too short.`;
+    if (validity.tooLong) return `${label} is too long.`;
+    if (validity.rangeUnderflow) return `${label} must be at least ${field.min}.`;
+    if (validity.rangeOverflow) return `${label} must be ${field.max} or less.`;
+    if (validity.stepMismatch || validity.badInput) return `Enter a valid number for ${lowerLabel}.`;
+    if (validity.patternMismatch) return `Enter ${lowerLabel} in the correct format.`;
+    return field.validationMessage || `Please check ${lowerLabel}.`;
+  };
+
+  const getFieldWrapper = (field) => field?.closest?.('[data-field-wrapper], .contact-form-field, .form-field, label') || null;
+
+  const ensureFieldError = (field) => {
+    if (!field) return null;
+    const wrapper = getFieldWrapper(field);
+    if (!wrapper) return null;
+    wrapper.classList.add('has-error');
+    field.setAttribute('aria-invalid', 'true');
+
+    let error = wrapper.querySelector('.field-error[data-client-error="true"]') || wrapper.querySelector('.field-error');
+    if (!error) {
+      error = document.createElement('small');
+      error.className = 'field-error';
+      error.dataset.clientError = 'true';
+      wrapper.appendChild(error);
+    }
+    if (!error.id) error.id = `${field.id || errorFieldId(field.name || 'field')}_error`;
+    field.setAttribute('aria-describedby', error.id);
+    if (field.validity && !field.validity.valid) error.textContent = friendlyValidityMessage(field, wrapper);
+    return wrapper;
+  };
+
+  const clearFieldError = (field) => {
+    const wrapper = getFieldWrapper(field);
+    if (!wrapper) return;
+    if (!field.validity || field.validity.valid) {
+      field.removeAttribute('aria-invalid');
+      wrapper.querySelector('.field-error[data-client-error="true"]')?.remove();
+      if (!wrapper.querySelector('.field-error')) wrapper.classList.remove('has-error');
+    }
+  };
+
+  const scrollToField = (target) => {
+    if (!target) return;
+    const element = target.closest?.('[data-field-wrapper], .contact-form-field, .form-field, label') || target;
+    const top = Math.max(0, element.getBoundingClientRect().top + window.scrollY - 105);
+    window.scrollTo({ top, behavior: 'smooth' });
+    element.classList.add('error-focus-pulse');
+    window.setTimeout(() => element.classList.remove('error-focus-pulse'), 1400);
+    const focusable = element.matches?.('input:not([type="hidden"]), select, textarea, button, [contenteditable="true"]')
+      ? element
+      : element.querySelector?.('input:not([type="hidden"]), select, textarea, button, [contenteditable="true"]');
+    focusable?.focus?.({ preventScroll: true });
+  };
+
+  const findFieldByErrorName = (name) => {
+    if (!name) return null;
+    const id = errorFieldId(name);
+    return document.getElementById(id)
+      || document.querySelector(`[data-field-name="${cssEscape(name)}"]`)
+      || document.querySelector(`[name="${cssEscape(name)}"]`)
+      || document.querySelector(`[name="${cssEscape(dottedNameToInputName(name))}"]`)
+      || document.querySelector(`[id="${cssEscape(id)}"]`);
+  };
+
+  const prepareServerErrors = () => {
+    document.querySelectorAll('.field-error').forEach((error) => {
+      const wrapper = error.closest('[data-field-wrapper], .contact-form-field, .form-field, label');
+      if (!wrapper) return;
+      wrapper.classList.add('has-error');
+      const field = wrapper.querySelector('input:not([type="hidden"]), select, textarea, [contenteditable="true"]');
+      if (field) {
+        field.setAttribute('aria-invalid', 'true');
+        if (!error.id) error.id = `${field.id || errorFieldId(field.name || 'field')}_error`;
+        field.setAttribute('aria-describedby', error.id);
+      }
+    });
+  };
+
+  prepareServerErrors();
+
+  document.querySelectorAll('[data-error-link]').forEach((link) => {
+    link.addEventListener('click', (event) => {
+      const target = findFieldByErrorName(link.dataset.errorField) || document.querySelector(link.getAttribute('href') || '');
+      if (!target) return;
+      event.preventDefault();
+      scrollToField(target);
+    });
+  });
+
+  document.addEventListener('invalid', (event) => {
+    if (!(event.target instanceof HTMLElement)) return;
+    ensureFieldError(event.target);
+  }, true);
+
+  document.addEventListener('input', (event) => {
+    if (event.target instanceof HTMLElement) clearFieldError(event.target);
+  }, true);
+
+  document.addEventListener('change', (event) => {
+    if (event.target instanceof HTMLElement) clearFieldError(event.target);
+  }, true);
+
+  document.addEventListener('submit', (event) => {
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement)) return;
+    if (form.checkValidity()) return;
+    event.preventDefault();
+    const firstInvalid = form.querySelector(':invalid');
+    ensureFieldError(firstInvalid);
+    scrollToField(firstInvalid);
+    firstInvalid?.reportValidity?.();
+  }, true);
+
+  window.requestAnimationFrame(() => {
+    if (document.querySelector('[data-error-summary]')) {
+      const first = document.querySelector('.field-error, [aria-invalid="true"], .has-error');
+      if (first) scrollToField(first);
+    }
+  });
+
   const showImageFallback = (image) => {
     if (!image || image.dataset.noFallback !== undefined || image.dataset.fallbackApplied === '1') return;
     image.dataset.fallbackApplied = '1';
@@ -402,6 +547,6 @@
   });
 
   window.setTimeout(() => {
-    document.querySelectorAll('.site-flash').forEach((flash) => flash.remove());
+    document.querySelectorAll('.site-flash-success').forEach((flash) => flash.remove());
   }, 7000);
 })();

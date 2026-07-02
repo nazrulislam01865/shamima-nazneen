@@ -17,16 +17,16 @@
 <body class="admin-body" data-image-fallback-text="{{ $siteSettings->image_fallback_text ?: 'Image is not available.' }}">
     <div class="admin-shell" data-admin-shell>
         <aside class="admin-sidebar" data-admin-sidebar>
-            <a class="admin-brand" href="{{ route('admin.dashboard') }}">
+            <a class="admin-brand {{ $siteSettings->logo_url ? 'admin-brand-logo-only' : '' }}" href="{{ route('admin.dashboard') }}" aria-label="{{ $siteSettings->site_name }} admin dashboard">
                 @if($siteSettings->logo_url)
-                    <img src="{{ $siteSettings->logo_url }}" alt="{{ $siteSettings->site_name }}">
+                    <img class="admin-site-logo" src="{{ $siteSettings->logo_url }}" alt="{{ $siteSettings->site_name }} logo">
                 @else
                     <span class="admin-brand-mark">SN</span>
+                    <span>
+                        <strong>{{ $siteSettings->site_name }}</strong>
+                        <small>Website administration</small>
+                    </span>
                 @endif
-                <span>
-                    <strong>{{ $siteSettings->site_name }}</strong>
-                    <small>Website administration</small>
-                </span>
             </a>
 
             <nav class="admin-nav" aria-label="Admin navigation">
@@ -146,9 +146,17 @@
                     </div>
                 @endif
                 @if($errors->any())
-                    <div class="admin-alert error" role="alert">
+                    <div class="admin-alert error validation-summary" role="alert" data-error-summary>
                         <strong>Please correct the highlighted information.</strong>
-                        <ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+                        <p>Click an item below to go directly to the field that needs attention.</p>
+                        <ul>
+                            @foreach($errors->getMessages() as $field => $messages)
+                                @php $fieldId = preg_replace('/[^A-Za-z0-9_-]+/', '_', $field); @endphp
+                                @foreach($messages as $message)
+                                    <li><a href="#{{ $fieldId }}" data-error-link data-error-field="{{ $field }}">{{ $message }}</a></li>
+                                @endforeach
+                            @endforeach
+                        </ul>
                         <button type="button" data-dismiss-alert aria-label="Dismiss">×</button>
                     </div>
                 @endif

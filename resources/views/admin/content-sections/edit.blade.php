@@ -35,8 +35,8 @@
             <div class="form-grid">
                 <x-admin.input name="button_label" label="Button label" :value="$contentSection->button_label" placeholder="Example: Read Biography" />
                 <x-admin.input name="button_url" label="Button link" :value="$contentSection->button_url" placeholder="/biography, #contact, or https://example.com" help="Use a site path, page anchor, or complete external URL." />
-                <div class="full"><x-admin.media-library-select name="library_media_id" label="Choose section image from Gallery / Media Library" :current-path="$contentSection->image_path" /></div>
-                <div class="full"><x-admin.image-upload name="image" label="Or upload a new section image" :current="$contentSection->image_url" help="Used only where the design contains an image. New uploads are automatically added to Gallery / Media Library." /></div>
+                <div class="full"><x-admin.media-library-select name="library_media_id" label="Choose section image from Image Gallery" :current-path="$contentSection->image_path" /></div>
+                <div class="full"><x-admin.image-upload name="image" label="Or upload a new section image" :current="$contentSection->image_url" help="Used only where the design contains an image. New uploads are automatically added to Image Gallery." /></div>
             </div>
         </section>
     @endif

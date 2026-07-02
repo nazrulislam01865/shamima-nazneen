@@ -2,11 +2,14 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\HasFriendlyValidationMessages;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
 class ContactInquiryRequest extends FormRequest
 {
+    use HasFriendlyValidationMessages;
+
     public function authorize(): bool
     {
         return true;
@@ -40,10 +43,10 @@ class ContactInquiryRequest extends FormRequest
 
     public function messages(): array
     {
-        return [
-            'website.size' => 'Unable to submit the form.',
+        return $this->friendlyValidationMessages([
+            'website.size' => 'Unable to submit the form. Please refresh the page and try again.',
             'captcha_answer.required' => 'Please solve the captcha before sending the inquiry.',
             'captcha_answer.integer' => 'Please enter the captcha answer as a number.',
-        ];
+        ]);
     }
 }

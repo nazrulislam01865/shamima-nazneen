@@ -60,14 +60,13 @@ final class AdminPageRegistry
                 'label' => 'Gallery Page',
                 'short_label' => 'Gallery',
                 'icon' => 'gallery',
-                'description' => 'Manage the gallery page heading, uploaded images, embedded YouTube videos, categories, and featured media.',
+                'description' => 'Manage the gallery page heading, image gallery, video gallery, categories, and featured media separately.',
                 'public_route' => 'gallery.index',
                 'modules' => [
                     self::module('overview', 'Page Overview', 'A focused control centre for image and video galleries.', 'grid', 'admin.pages.show', ['page' => 'gallery'], 'admin.pages.show', routeParams: ['page' => 'gallery']),
                     self::module('content', 'Page Content', 'Edit the gallery page hero heading and introductory text.', 'layout', 'admin.content-sections.index', ['page' => 'gallery'], 'admin.content-sections.*', context: ['page' => 'gallery']),
-                    self::module('images', 'Image Gallery', 'Manage the image collection shown first on the gallery page.', 'image', 'admin.gallery-media.images', [], 'admin.gallery-media.images'),
-                    self::module('videos', 'Video Gallery', 'Manage the YouTube video collection shown after the images.', 'video', 'admin.gallery-media.videos', [], 'admin.gallery-media.videos'),
-                    self::module('media', 'All Gallery Media', 'View images and videos together in one management list.', 'gallery', 'admin.media-items.index', [], 'admin.media-items.index', queryAbsent: ['type', 'home']),
+                    self::module('images', 'Image Gallery', 'Manage uploaded images only. This gallery never mixes with videos.', 'image', 'admin.gallery-media.images', [], 'admin.gallery-media.images'),
+                    self::module('videos', 'Video Gallery', 'Manage YouTube videos only. This gallery never mixes with images.', 'video', 'admin.gallery-media.videos', [], 'admin.gallery-media.videos'),
                 ],
             ],
         ];

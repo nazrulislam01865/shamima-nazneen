@@ -1,19 +1,23 @@
 @php
     $social = $siteSettings->social_links ?? [];
+    $footerFollowLinks = collect($siteSettings->profile_card_links ?? [])
+        ->filter(fn ($link) => filled($link['title'] ?? null) && filled($link['url'] ?? null))
+        ->values();
+    $hasLogo = filled($siteSettings->logo_url);
 @endphp
 <footer>
     <div class="container">
         <div class="footer-grid">
             <div>
-                <a class="brand" href="{{ route('home') }}">
-                    <span class="brand-mark">
-                        @if($siteSettings->logo_url)
-                            <img src="{{ $siteSettings->logo_url }}" alt="{{ $siteSettings->site_name }} logo">
-                        @else
+                <a class="brand footer-brand {{ $hasLogo ? 'brand-logo-only' : '' }}" href="{{ route('home') }}" aria-label="{{ $siteSettings->site_name }} home">
+                    @if($hasLogo)
+                        <img class="site-logo-img footer-logo-img" src="{{ $siteSettings->logo_url }}" alt="{{ $siteSettings->site_name }} logo">
+                    @else
+                        <span class="brand-mark">
                             {{ mb_substr($siteSettings->site_name ?: 'S', 0, 1) }}
-                        @endif
-                    </span>
-                    <span>{{ $siteSettings->site_name }}</span>
+                        </span>
+                        <span class="brand-name">{{ $siteSettings->site_name }}</span>
+                    @endif
                 </a>
                 <p>{{ $siteSettings->footer_text ?: $siteSettings->tagline }}</p>
             </div>
@@ -37,7 +41,7 @@
             <div>
                 <strong>Social Links</strong>
                 <div class="footer-social-icons">
-                    @include('frontend.partials.social-links')
+                    @include('frontend.partials.social-links', ['links' => $footerFollowLinks])
                 </div>
             </div>
         </div>

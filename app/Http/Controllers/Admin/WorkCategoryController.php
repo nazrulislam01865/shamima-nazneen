@@ -7,7 +7,6 @@ use App\Http\Controllers\Concerns\UsesMediaLibrary;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\WorkCategoryRequest;
 use App\Models\WorkCategory;
-use App\Support\MediaLibrary;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Str;
@@ -32,17 +31,23 @@ class WorkCategoryController extends Controller
     public function store(WorkCategoryRequest $request): RedirectResponse
     {
         $data = $request->safe()->except(['home_image', 'remove_home_image', 'library_media_id']);
-        $data['home_links'] = $this->normaliseHomeLinks($data['home_links'] ?? []);
-        $data['link_label'] = $data['home_links'][0]['label'] ?? null;
-        $data['forward_url'] = $data['home_links'][0]['url'] ?? null;
-        $data['slug'] = $this->uniqueSlug($data['slug'] ?: $data['name']);
+        $data['slug'] = $this->uniqueSlug($data['slug'] ?? $data['name']);
+        $data['home_links'] = null;
+        $data['link_label'] = null;
+        $data['forward_url'] = null;
         $data['home_image_path'] = $this->resolveLibraryImage(
-            $request, 'home_image', 'remove_home_image', 'library_media_id', 'work-categories', null,
-            ($data['home_title'] ?? null) ?: $data['name'], 'Selected Works Cards'
+            $request,
+            'home_image',
+            'remove_home_image',
+            'library_media_id',
+            'work-categories',
+            null,
+            ($data['home_title'] ?? null) ?: $data['name'],
+            'Selected Works Cards'
         );
         $data['sort_order'] = ((int) WorkCategory::query()->max('sort_order')) + 10;
+
         WorkCategory::query()->create($data);
-        $this->registerLinkedVideos($data['home_links'], ($data['home_title'] ?? null) ?: $data['name']);
 
         return redirect()->route('admin.work-categories.index')->with('success', 'Work category created successfully.');
     }
@@ -55,16 +60,22 @@ class WorkCategoryController extends Controller
     public function update(WorkCategoryRequest $request, WorkCategory $workCategory): RedirectResponse
     {
         $data = $request->safe()->except(['home_image', 'remove_home_image', 'library_media_id']);
-        $data['home_links'] = $this->normaliseHomeLinks($data['home_links'] ?? []);
-        $data['link_label'] = $data['home_links'][0]['label'] ?? null;
-        $data['forward_url'] = $data['home_links'][0]['url'] ?? null;
-        $data['slug'] = $this->uniqueSlug($data['slug'] ?: $data['name'], $workCategory->id);
+        $data['slug'] = $this->uniqueSlug($data['slug'] ?? $workCategory->slug ?? $data['name'], $workCategory->id);
+        $data['home_links'] = null;
+        $data['link_label'] = null;
+        $data['forward_url'] = null;
         $data['home_image_path'] = $this->resolveLibraryImage(
-            $request, 'home_image', 'remove_home_image', 'library_media_id', 'work-categories', $workCategory->home_image_path,
-            ($data['home_title'] ?? null) ?: $data['name'], 'Selected Works Cards'
+            $request,
+            'home_image',
+            'remove_home_image',
+            'library_media_id',
+            'work-categories',
+            $workCategory->home_image_path,
+            ($data['home_title'] ?? null) ?: $data['name'],
+            'Selected Works Cards'
         );
+
         $workCategory->update($data);
-        $this->registerLinkedVideos($data['home_links'], ($data['home_title'] ?? null) ?: $data['name']);
 
         return redirect()->route('admin.work-categories.index')->with('success', 'Work category updated successfully.');
     }
@@ -79,37 +90,6 @@ class WorkCategoryController extends Controller
         $workCategory->delete();
 
         return back()->with('success', 'Work category deleted successfully.');
-    }
-
-
-    /**
-     * @param array<int, array<string, mixed>> $links
-     * @return array<int, array{label: string, url: string}>
-     */
-    private function normaliseHomeLinks(array $links): array
-    {
-        return collect($links)
-            ->map(fn (array $link): array => [
-                'label' => trim((string) ($link['label'] ?? '')),
-                'url' => trim((string) ($link['url'] ?? '')),
-            ])
-            ->filter(fn (array $link): bool => $link['label'] !== '' && $link['url'] !== '')
-            ->values()
-            ->all();
-    }
-
-    /**
-     * @param array<int, array{label: string, url: string}> $links
-     */
-    private function registerLinkedVideos(array $links, string $title): void
-    {
-        foreach ($links as $link) {
-            MediaLibrary::registerVideo(
-                $link['url'] ?? null,
-                ($link['label'] ?? null) ?: $title,
-                'Selected Works Cards',
-            );
-        }
     }
 
     private function uniqueSlug(string $value, ?int $ignoreId = null): string

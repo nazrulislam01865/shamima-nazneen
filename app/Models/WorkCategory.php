@@ -39,22 +39,9 @@ class WorkCategory extends Model
      */
     public function getResolvedHomeLinksAttribute(): array
     {
-        $links = collect($this->home_links ?? [])
-            ->map(fn ($link): array => [
-                'label' => trim((string) ($link['label'] ?? '')),
-                'url' => trim((string) ($link['url'] ?? '')),
-            ])
-            ->filter(fn (array $link): bool => $link['label'] !== '' && $link['url'] !== '')
-            ->values()
-            ->all();
-
-        if ($links !== []) {
-            return $links;
-        }
-
         return [[
-            'label' => $this->link_label ?: 'View '.$this->name.' →',
-            'url' => $this->forward_url ?: route('works.index', ['category' => $this->slug]),
+            'label' => 'View '.$this->name.' →',
+            'url' => route('works.index', ['category' => $this->slug]),
         ]];
     }
 }

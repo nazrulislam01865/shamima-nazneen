@@ -5,8 +5,8 @@
 <section class="form-section">
     <div class="form-section-heading"><h2>Slide image and content</h2><p>Each slide contains only an image, title, and short subtitle. No button is displayed in the hero slider.</p></div>
     <div class="form-grid">
-        <div class="full"><x-admin.media-library-select name="library_media_id" label="Choose hero image from Gallery / Media Library" :current-path="$slide?->image_path" /></div>
-        <div class="full"><x-admin.image-upload name="image" label="Or upload a new hero image" :current="$slide?->image_url" help="Recommended: 1920×900 or wider. A new upload is automatically added to Gallery / Media Library." /></div>
+        <div class="full"><x-admin.media-library-select name="library_media_id" label="Choose hero image from Image Gallery" :current-path="$slide?->image_path" /></div>
+        <div class="full"><x-admin.image-upload name="image" label="Or upload a new hero image" :current="$slide?->image_url" help="Recommended: 1920×900 or wider. A new upload is automatically added to Image Gallery." /></div>
         <x-admin.input name="title" label="Slide title" :value="$slide?->title" placeholder="Enter the main hero slide title" />
         <x-admin.input name="subtitle" label="Short subtitle" :value="$slide?->subtitle" placeholder="Write a short supporting line" />
     </div>

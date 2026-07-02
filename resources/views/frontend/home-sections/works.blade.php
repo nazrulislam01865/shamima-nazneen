@@ -9,8 +9,12 @@
         <div class="card-grid">
             @foreach($workCategories as $category)
                 <article class="work-card">
-                    <div class="work-img">
-                        <img src="{{ $category->home_image_url }}" alt="{{ \App\Support\MediaLibrary::altTextForPath($category->home_image_path, $category->home_title ?: $category->name) }}" data-fallback-text="{{ \App\Support\MediaLibrary::fallbackTextForPath($category->home_image_path, $siteSettings->image_fallback_text) }}">
+                    <div class="work-img {{ $category->home_image_url ? '' : 'work-img-empty' }}">
+                        @if($category->home_image_url)
+                            <img src="{{ $category->home_image_url }}" alt="{{ \App\Support\MediaLibrary::altTextForPath($category->home_image_path, $category->home_title ?: $category->name) }}" data-fallback-text="{{ \App\Support\MediaLibrary::fallbackTextForPath($category->home_image_path, $siteSettings->image_fallback_text) }}">
+                        @else
+                            <span class="work-img-placeholder">{{ $siteSettings->image_fallback_text ?: 'Image is not available.' }}</span>
+                        @endif
                     </div>
                     <div class="work-body">
                         <h3>{{ $category->home_title ?: $category->name }}</h3>

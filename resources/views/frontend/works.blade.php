@@ -159,10 +159,10 @@
                         <h2>{{ $contact->title }}</h2>
                         <div class="rich-content">{!! $contact->description !!}</div>
                     </div>
-                    <div class="hero-actions" style="margin:0">
-                        <a class="btn light" href="{{ $contact->button_url ?: route('home').'#contact' }}">{{ $contact->button_label ?: 'Send Inquiry' }}</a>
-                        <a class="btn outline" href="{{ route('biography.index') }}">View Biography</a>
-                        <a class="btn outline" href="{{ route('videos.index') }}">Watch Videos</a>
+                    <div class="hero-actions bottom-cta-actions" style="margin:0">
+                        <a class="btn light bottom-cta-inquiry" href="{{ $contact->button_url ?: route('home').'#contact' }}">{{ $contact->button_label ?: 'Send Inquiry' }}</a>
+                        <a class="btn outline bottom-cta-biography" href="{{ route('biography.index') }}">View Biography</a>
+                        <a class="btn outline bottom-cta-videos" href="{{ route('videos.index') }}">Watch Videos</a>
                     </div>
                 </div>
             @endif

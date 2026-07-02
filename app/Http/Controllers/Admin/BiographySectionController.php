@@ -32,7 +32,7 @@ class BiographySectionController extends Controller
     public function store(BiographySectionRequest $request): RedirectResponse
     {
         $data = $request->safe()->except(['image', 'remove_image', 'library_media_id']);
-        $data['slug'] = $this->uniqueSlug($data['slug'] ?: $data['title']);
+        $data['slug'] = $this->uniqueSlug($data['slug'] ?? $data['title']);
         $data['content'] = RichTextSanitizer::clean($data['content']);
         $data['image_path'] = $this->resolveLibraryImage(
             $request, 'image', 'remove_image', 'library_media_id', 'biography', null,
@@ -52,7 +52,7 @@ class BiographySectionController extends Controller
     public function update(BiographySectionRequest $request, BiographySection $biographySection): RedirectResponse
     {
         $data = $request->safe()->except(['image', 'remove_image', 'library_media_id']);
-        $data['slug'] = $this->uniqueSlug($data['slug'] ?: $data['title'], $biographySection->id);
+        $data['slug'] = $this->uniqueSlug($data['slug'] ?? $biographySection->slug ?? $data['title'], $biographySection->id);
         $data['content'] = RichTextSanitizer::clean($data['content']);
         $data['image_path'] = $this->resolveLibraryImage(
             $request, 'image', 'remove_image', 'library_media_id', 'biography', $biographySection->image_path,

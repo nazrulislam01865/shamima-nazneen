@@ -9,10 +9,10 @@
     ]);
 @endphp
 @section('title', 'Add '.$label)
-@section('page_title', 'Gallery / Media Library')
+@section('page_title', $label.' Gallery')
 @section('page_context', ($defaultShowInProfiles ?? false) ? 'Home Page' : 'Gallery Page')
 @section('content')
-<x-admin.page-header :title="'Add '.strtolower($label)" description="Add the item once, then choose every public section where it should appear." />
+<x-admin.page-header :title="'Add '.strtolower($label)" :description="$defaultType === 'video' ? 'Add a YouTube video to the separate Video Gallery.' : 'Upload an image to the separate Image Gallery.'" />
 <form class="admin-form" action="{{ route('admin.media-items.store', $context) }}" method="POST" enctype="multipart/form-data" data-disable-on-submit>
     @csrf
     @if(($defaultShowOnHome ?? false))<input type="hidden" name="home" value="1">@endif

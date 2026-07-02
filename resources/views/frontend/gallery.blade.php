@@ -1,6 +1,6 @@
 @extends('layouts.frontend')
 
-@section('title', 'Gallery | '.$siteSettings->site_name)
+@section('title', (($initialType ?? 'image') === 'video' ? 'Videos' : 'Gallery').' | '.$siteSettings->site_name)
 @section('meta_description', strip_tags($page->get('hero')?->description ?: $siteSettings->seo_description))
 @section('page_css', 'gallery')
 
@@ -8,13 +8,13 @@
 @php
     $hero = $page->get('hero');
 @endphp
-<main id="top" data-initial-gallery-filter="{{ $initialType ?? '' }}">
+<main id="top" class="gallery-page {{ ($initialType ?? 'image') === 'video' ? 'gallery-page-video' : 'gallery-page-image' }}" data-initial-gallery-filter="{{ $initialType ?? '' }}">
     <section class="gallery-page-hero">
         <div class="container">
             <div class="gallery-title-wrap">
                 <div class="section-label">{{ $hero?->eyebrow ?: 'Gallery' }}</div>
-                <h1>{{ $hero?->title ?: 'Image & Video Gallery' }}</h1>
-                <div class="subhead">Moments from screen, stage, and public life.</div>
+                <h1>{{ ($initialType ?? 'image') === 'video' ? 'Video Gallery' : ($hero?->title ?: 'Image Gallery') }}</h1>
+                <div class="subhead">{{ ($initialType ?? 'image') === 'video' ? 'Selected video appearances, interviews, and features.' : 'Moments from screen, stage, and public life.' }}</div>
                 <div class="rich-content">{!! $hero?->description !!}</div>
             </div>
         </div>
@@ -22,22 +22,19 @@
 
     <section class="gallery-main">
         <div class="container">
-            <div class="filter-bar" aria-label="Gallery filter options">
-                <button class="filter-btn active" data-filter="all" type="button">All</button>
-                <button class="filter-btn" data-filter="type:image" type="button">Images</button>
-                <button class="filter-btn" data-filter="type:video" type="button">Videos</button>
-                @foreach($categories as $category)
-                    <button class="filter-btn" data-filter="category:{{ $category }}" type="button">{{ $category }}</button>
-                @endforeach
-            </div>
+            @if($categories->isNotEmpty())
+                <div class="filter-bar" aria-label="Gallery filter options">
+                    <button class="filter-btn active" data-filter="all" type="button">All {{ ($initialType ?? 'image') === 'video' ? 'Videos' : 'Images' }}</button>
+                    @foreach($categories as $category)
+                        <button class="filter-btn" data-filter="category:{{ $category }}" type="button">{{ $category }}</button>
+                    @endforeach
+                </div>
+            @endif
 
-            <div class="image-grid">
+            <div class="image-grid gallery-items-grid {{ ($initialType ?? 'image') === 'video' ? 'gallery-video-grid' : 'gallery-image-grid' }}">
                 @forelse($items as $item)
-                    @php
-                        $shape = $loop->iteration % 7 === 1 ? 'large' : ($loop->iteration % 5 === 0 ? 'wide' : ($loop->iteration % 3 === 0 ? 'tall' : ''));
-                    @endphp
                     @if($item->type === 'image')
-                        <article class="gallery-card image-gallery-card {{ $shape }}"
+                        <article class="gallery-card image-gallery-card"
                                  data-type="image"
                                  data-category="{{ $item->category }}"
                                  tabindex="0"
@@ -57,7 +54,7 @@
                             $showRelatedLink = filled($relatedUrl) && $relatedUrl !== $watchUrl;
                             $relatedIsExternal = \Illuminate\Support\Str::startsWith($relatedUrl, ['http://', 'https://']);
                         @endphp
-                        <article class="gallery-card video-gallery-card {{ $shape }}" data-type="video" data-category="{{ $item->category }}">
+                        <article class="gallery-card video-gallery-card" data-type="video" data-category="{{ $item->category }}">
                             <div class="gallery-video-frame">
                                 @if($item->embed_url)
                                     <iframe src="{{ $item->embed_url }}" title="{{ $item->title }}" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
@@ -77,7 +74,7 @@
                         </article>
                     @endif
                 @empty
-                    <div class="gallery-empty">No gallery items are available yet.</div>
+                    <div class="gallery-empty">No {{ ($initialType ?? 'image') === 'video' ? 'videos' : 'images' }} are available yet.</div>
                 @endforelse
             </div>
         </div>

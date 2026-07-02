@@ -14,13 +14,12 @@
         <x-admin.select name="category_id" label="Work category" :options="$categories->pluck('name','id')->all()" :value="$record?->category_id" required />
         <x-admin.input name="title" label="Work name" :value="$record?->title" required placeholder="Enter the film, drama, theatre, or project name" />
         <x-admin.input name="year" label="Release / production year" type="number" :value="$record?->year" required min="1900" :max="date('Y') + 5" placeholder="2024" />
-        <x-admin.input name="slug" label="URL slug" :value="$record?->slug" placeholder="Example: project-name" help="Optional. Generated from the work name." />
         <x-admin.input name="credit" label="Credit" :value="$record?->credit" placeholder="Actor, Director, Guest appearance" />
         <x-admin.input name="role" label="Character / role" :value="$record?->role" placeholder="Example: Lead character, Guest artist" />
         <x-admin.input name="platform" label="Channel / platform" :value="$record?->platform" placeholder="BTV, YouTube, Chorki..." />
         <div class="full"><x-admin.rich-text name="short_description" label="Short description shown in View Details" :value="$record?->short_description" required help="This rich-text content appears inside the public popup after a visitor clicks View Details." /></div>
-        <div class="full"><x-admin.media-library-select name="library_media_id" label="Choose poster from Gallery / Media Library" :current-path="$record?->image_path" /></div>
-        <div class="full"><x-admin.image-upload name="image" label="Or upload a new poster / work image" :current="$record?->image_url" help="A new upload is automatically added to Gallery / Media Library." /></div>
+        <div class="full"><x-admin.media-library-select name="library_media_id" label="Choose poster from Image Gallery" :current-path="$record?->image_path" /></div>
+        <div class="full"><x-admin.image-upload name="image" label="Or upload a new poster / work image" :current="$record?->image_url" help="A new upload is automatically added to Image Gallery." /></div>
     </div>
 </section>
 <section class="form-section">
@@ -31,16 +30,20 @@
     <div class="repeatable-list" data-repeatable-links data-repeatable-name="external_links" data-next-index="{{ count($externalLinks) }}">
         <div class="repeatable-list-rows" data-repeatable-rows>
             @foreach($externalLinks as $index => $link)
+                @php
+                    $labelErrorKey = "external_links.$index.label";
+                    $urlErrorKey = "external_links.$index.url";
+                @endphp
                 <div class="repeatable-link-row" data-repeatable-row>
-                    <div class="form-field">
+                    <div class="form-field {{ $errors->has($labelErrorKey) ? 'has-error' : '' }}" data-field-wrapper data-field-name="{{ $labelErrorKey }}">
                         <label for="external_links_{{ $index }}_label">Link name</label>
-                        <input id="external_links_{{ $index }}_label" name="external_links[{{ $index }}][label]" type="text" value="{{ $link['label'] ?? '' }}" maxlength="120">
-                        @error("external_links.$index.label")<small class="field-error">{{ $message }}</small>@enderror
+                        <input id="external_links_{{ $index }}_label" name="external_links[{{ $index }}][label]" type="text" value="{{ $link['label'] ?? '' }}" maxlength="120" @if($errors->has($labelErrorKey)) aria-invalid="true" aria-describedby="external_links_{{ $index }}_label_error" @endif>
+                        @error($labelErrorKey)<small id="external_links_{{ $index }}_label_error" class="field-error">{{ $message }}</small>@enderror
                     </div>
-                    <div class="form-field">
+                    <div class="form-field {{ $errors->has($urlErrorKey) ? 'has-error' : '' }}" data-field-wrapper data-field-name="{{ $urlErrorKey }}">
                         <label for="external_links_{{ $index }}_url">Link URL</label>
-                        <input id="external_links_{{ $index }}_url" name="external_links[{{ $index }}][url]" type="text" value="{{ $link['url'] ?? '' }}" maxlength="500">
-                        @error("external_links.$index.url")<small class="field-error">{{ $message }}</small>@enderror
+                        <input id="external_links_{{ $index }}_url" name="external_links[{{ $index }}][url]" type="text" value="{{ $link['url'] ?? '' }}" maxlength="500" @if($errors->has($urlErrorKey)) aria-invalid="true" aria-describedby="external_links_{{ $index }}_url_error" @endif>
+                        @error($urlErrorKey)<small id="external_links_{{ $index }}_url_error" class="field-error">{{ $message }}</small>@enderror
                     </div>
                     <button class="admin-button danger small repeatable-remove" type="button" data-repeatable-remove>Remove</button>
                 </div>

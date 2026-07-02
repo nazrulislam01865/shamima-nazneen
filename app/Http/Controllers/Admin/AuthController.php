@@ -24,7 +24,7 @@ class AuthController extends Controller
         $credentials = $request->safe()->only(['email', 'password']);
 
         if (! Auth::attempt($credentials, $request->boolean('remember'))) {
-            return back()->withErrors(['email' => 'The provided credentials are incorrect.'])->onlyInput('email');
+            return back()->withErrors(['email' => 'The email address or password is not correct. Please check and try again.'])->onlyInput('email');
         }
 
         $request->session()->regenerate();
@@ -34,7 +34,7 @@ class AuthController extends Controller
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
-            return back()->withErrors(['email' => 'This account does not have administrator access.']);
+            return back()->withErrors(['email' => 'This account cannot access the admin panel. Please use an authorized administrator account.']);
         }
 
         $user = $request->user();

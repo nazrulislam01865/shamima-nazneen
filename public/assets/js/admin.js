@@ -17,6 +17,7 @@
     });
 
     const shell = document.querySelector('[data-admin-shell]');
+    const sidebar = document.querySelector('[data-admin-sidebar]');
     const setSidebar = (open) => shell?.classList.toggle('sidebar-open', open);
     document.querySelector('[data-sidebar-toggle]')?.addEventListener('click', () => setSidebar(true));
     document.querySelector('[data-sidebar-backdrop]')?.addEventListener('click', () => setSidebar(false));
@@ -24,8 +25,184 @@
         if (event.key === 'Escape') setSidebar(false);
     });
 
+    // Keep the sidebar steady between admin page changes so it does not visually flash or jump to the top.
+    if (sidebar) {
+        const sidebarScrollKey = 'shamimaAdminSidebarScrollTop';
+        const restoreSidebarScroll = () => {
+            const savedScroll = Number(window.sessionStorage.getItem(sidebarScrollKey) || 0);
+            if (Number.isFinite(savedScroll) && savedScroll > 0) sidebar.scrollTop = savedScroll;
+        };
+        restoreSidebarScroll();
+        window.requestAnimationFrame(restoreSidebarScroll);
+
+        let sidebarScrollTimer;
+        sidebar.addEventListener('scroll', () => {
+            window.clearTimeout(sidebarScrollTimer);
+            sidebarScrollTimer = window.setTimeout(() => {
+                window.sessionStorage.setItem(sidebarScrollKey, String(sidebar.scrollTop));
+            }, 80);
+        }, { passive: true });
+
+        document.querySelectorAll('.admin-sidebar a, .admin-nav a').forEach((link) => {
+            link.addEventListener('click', () => {
+                window.sessionStorage.setItem(sidebarScrollKey, String(sidebar.scrollTop));
+            });
+        });
+    }
+
     document.querySelectorAll('[data-dismiss-alert]').forEach((button) => {
         button.addEventListener('click', () => button.closest('.admin-alert')?.remove());
+    });
+
+    const cssEscape = (value) => {
+        if (window.CSS?.escape) return window.CSS.escape(String(value));
+        return String(value).replace(/[^a-zA-Z0-9_-]/g, '\\$&');
+    };
+
+    const errorFieldId = (name) => String(name || '').replace(/[^A-Za-z0-9_-]+/g, '_');
+
+    const dottedNameToInputName = (name) => {
+        const parts = String(name || '').split('.').filter(Boolean);
+        if (parts.length <= 1) return String(name || '');
+        return `${parts.shift()}${parts.map((part) => `[${part}]`).join('')}`;
+    };
+
+    const fieldLabel = (wrapper, field) => {
+        const label = wrapper?.querySelector('label')?.textContent || field?.getAttribute('aria-label') || field?.name || 'This field';
+        return label.replace('*', '').replace(/\s+/g, ' ').trim() || 'This field';
+    };
+
+    const friendlyValidityMessage = (field, wrapper) => {
+        const label = fieldLabel(wrapper, field);
+        const lowerLabel = label.charAt(0).toLowerCase() + label.slice(1);
+        const validity = field.validity;
+        if (validity.valueMissing) return `${label} is required.`;
+        if (validity.typeMismatch && field.type === 'email') return `Enter a valid email address.`;
+        if (validity.typeMismatch && field.type === 'url') return `Enter a valid link for ${lowerLabel}.`;
+        if (validity.tooShort) return `${label} is too short.`;
+        if (validity.tooLong) return `${label} is too long.`;
+        if (validity.rangeUnderflow) return `${label} must be at least ${field.min}.`;
+        if (validity.rangeOverflow) return `${label} must be ${field.max} or less.`;
+        if (validity.stepMismatch || validity.badInput) return `Enter a valid number for ${lowerLabel}.`;
+        if (validity.patternMismatch) return `Enter ${lowerLabel} in the correct format.`;
+        return field.validationMessage || `Please check ${lowerLabel}.`;
+    };
+
+    const getFieldWrapper = (field) => field?.closest?.('[data-field-wrapper], .form-field, .checkbox-field, label') || null;
+
+    const ensureFieldError = (field) => {
+        if (!field) return null;
+        const wrapper = getFieldWrapper(field);
+        if (!wrapper) return null;
+        wrapper.classList.add('has-error');
+        field.setAttribute('aria-invalid', 'true');
+
+        let error = wrapper.querySelector('.field-error[data-client-error="true"]') || wrapper.querySelector('.field-error');
+        if (!error) {
+            error = document.createElement('small');
+            error.className = 'field-error';
+            error.dataset.clientError = 'true';
+            wrapper.appendChild(error);
+        }
+        if (!error.id) error.id = `${field.id || errorFieldId(field.name || 'field')}_error`;
+        field.setAttribute('aria-describedby', error.id);
+        if (field.validity && !field.validity.valid) error.textContent = friendlyValidityMessage(field, wrapper);
+        return wrapper;
+    };
+
+    const clearFieldError = (field) => {
+        const wrapper = getFieldWrapper(field);
+        if (!wrapper) return;
+        if (!field.validity || field.validity.valid) {
+            field.removeAttribute('aria-invalid');
+            wrapper.querySelector('.field-error[data-client-error="true"]')?.remove();
+            if (!wrapper.querySelector('.field-error')) wrapper.classList.remove('has-error');
+        }
+    };
+
+    const focusInside = (target) => {
+        const focusable = target?.matches?.('input:not([type="hidden"]), select, textarea, button, [contenteditable="true"], a[href]')
+            ? target
+            : target?.querySelector?.('[contenteditable="true"], input:not([type="hidden"]), select, textarea, button, a[href]');
+        focusable?.focus?.({ preventScroll: true });
+    };
+
+    const scrollToField = (target) => {
+        if (!target) return;
+        const element = target.closest?.('[data-field-wrapper], .form-field, .checkbox-field, label') || target;
+        const top = Math.max(0, element.getBoundingClientRect().top + window.scrollY - 110);
+        window.scrollTo({ top, behavior: 'smooth' });
+        element.classList.add('error-focus-pulse');
+        window.setTimeout(() => element.classList.remove('error-focus-pulse'), 1400);
+        focusInside(element);
+    };
+
+    const findFieldByErrorName = (name) => {
+        if (!name) return null;
+        const id = errorFieldId(name);
+        return document.getElementById(id)
+            || document.querySelector(`[data-field-name="${cssEscape(name)}"]`)
+            || document.querySelector(`[name="${cssEscape(name)}"]`)
+            || document.querySelector(`[name="${cssEscape(dottedNameToInputName(name))}"]`)
+            || document.querySelector(`[id="${cssEscape(id)}"]`);
+    };
+
+    const prepareServerErrors = () => {
+        document.querySelectorAll('.field-error').forEach((error) => {
+            const wrapper = error.closest('[data-field-wrapper], .form-field, .checkbox-field, label');
+            if (!wrapper) return;
+            wrapper.classList.add('has-error');
+            const field = wrapper.querySelector('[contenteditable="true"], input:not([type="hidden"]), select, textarea');
+            if (field) {
+                field.setAttribute('aria-invalid', 'true');
+                if (!error.id) error.id = `${field.id || errorFieldId(field.name || 'field')}_error`;
+                field.setAttribute('aria-describedby', error.id);
+            }
+        });
+    };
+
+    const focusFirstServerError = () => {
+        const first = document.querySelector('.field-error, [aria-invalid="true"], .has-error');
+        if (first) scrollToField(first);
+    };
+
+    prepareServerErrors();
+
+    document.querySelectorAll('[data-error-link]').forEach((link) => {
+        link.addEventListener('click', (event) => {
+            const target = findFieldByErrorName(link.dataset.errorField) || document.querySelector(link.getAttribute('href') || '');
+            if (!target) return;
+            event.preventDefault();
+            scrollToField(target);
+        });
+    });
+
+    document.addEventListener('invalid', (event) => {
+        if (!(event.target instanceof HTMLElement)) return;
+        ensureFieldError(event.target);
+    }, true);
+
+    document.addEventListener('input', (event) => {
+        if (event.target instanceof HTMLElement) clearFieldError(event.target);
+    }, true);
+
+    document.addEventListener('change', (event) => {
+        if (event.target instanceof HTMLElement) clearFieldError(event.target);
+    }, true);
+
+    document.addEventListener('submit', (event) => {
+        const form = event.target;
+        if (!(form instanceof HTMLFormElement)) return;
+        if (form.checkValidity()) return;
+        event.preventDefault();
+        const firstInvalid = form.querySelector(':invalid');
+        ensureFieldError(firstInvalid);
+        scrollToField(firstInvalid);
+        firstInvalid?.reportValidity?.();
+    }, true);
+
+    window.requestAnimationFrame(() => {
+        if (document.querySelector('[data-error-summary]')) focusFirstServerError();
     });
 
     document.querySelectorAll('form[data-confirm-delete]').forEach((form) => {
@@ -35,11 +212,13 @@
         });
     });
 
-    document.querySelectorAll('[data-image-upload]').forEach((wrapper) => {
+    const bindImageUploadPreview = (wrapper) => {
+        if (!wrapper || wrapper.dataset.imageUploadBound === '1') return;
         const input = wrapper.querySelector('[data-image-input]');
         const preview = wrapper.querySelector('[data-image-preview]');
         if (!input || !preview) return;
 
+        wrapper.dataset.imageUploadBound = '1';
         input.addEventListener('change', () => {
             const file = input.files?.[0];
             if (!file) return;
@@ -54,7 +233,9 @@
             });
             reader.readAsDataURL(file);
         });
-    });
+    };
+
+    document.querySelectorAll('[data-image-upload]').forEach(bindImageUploadPreview);
 
     document.querySelectorAll('[data-rich-editor]').forEach((wrapper) => {
         const editor = wrapper.querySelector('[data-rich-content]');
@@ -334,6 +515,8 @@
         const title = picker.querySelector('[data-media-picker-preview-title]');
         const clearButton = picker.querySelector('[data-media-picker-clear]');
 
+        const kind = picker.dataset.mediaKind || 'image';
+
         const renderPreview = (url, name, alt) => {
             if (!preview) return;
             preview.classList.toggle('has-image', Boolean(url));
@@ -342,17 +525,17 @@
             if (url) {
                 const image = document.createElement('img');
                 image.src = url;
-                image.alt = alt || name || 'Selected image';
+                image.alt = alt || name || `Selected ${kind}`;
                 image.dataset.mediaPickerPreviewImage = 'true';
                 preview.prepend(image);
             } else {
                 const empty = document.createElement('span');
                 empty.dataset.mediaPickerEmpty = 'true';
-                empty.textContent = 'No image selected yet.';
+                empty.textContent = `No ${kind} selected yet.`;
                 preview.prepend(empty);
             }
 
-            if (title) title.textContent = name || 'No image selected';
+            if (title) title.textContent = name || `No ${kind} selected`;
         };
 
         const selectCard = (card) => {
@@ -363,7 +546,7 @@
                 item.classList.toggle('is-selected', active);
                 item.setAttribute('aria-selected', active ? 'true' : 'false');
             });
-            renderPreview(card.dataset.mediaUrl || '', card.dataset.mediaTitle || 'Selected image', card.dataset.mediaAlt || card.dataset.mediaTitle || 'Selected image');
+            renderPreview(card.dataset.mediaUrl || '', card.dataset.mediaTitle || `Selected ${kind}`, card.dataset.mediaAlt || card.dataset.mediaTitle || `Selected ${kind}`);
         };
 
         cards.forEach((card) => {
@@ -377,7 +560,7 @@
                 item.setAttribute('aria-selected', 'false');
             });
             const currentUrl = picker.dataset.currentUrl || '';
-            const currentTitle = picker.dataset.currentTitle || 'No image selected';
+            const currentTitle = picker.dataset.currentTitle || `No ${kind} selected`;
             renderPreview(currentUrl, currentTitle, picker.dataset.currentAlt || currentTitle);
         });
     });
@@ -394,7 +577,17 @@
             row.querySelector('[data-repeatable-remove]')?.addEventListener('click', () => {
                 const allRows = rows.querySelectorAll('[data-repeatable-row]');
                 if (allRows.length === 1) {
-                    row.querySelectorAll('input, textarea, select').forEach((field) => { field.value = ''; });
+                    row.querySelectorAll('input, textarea, select').forEach((field) => {
+                        if (field.matches('input[type=checkbox], input[type=radio]')) {
+                            field.checked = false;
+                        } else {
+                            field.value = '';
+                        }
+                    });
+                    row.querySelectorAll('[data-image-preview]').forEach((preview) => {
+                        preview.innerHTML = '<span>Auto logo will be used</span>';
+                        preview.classList.remove('has-image');
+                    });
                     return;
                 }
                 row.remove();
@@ -415,7 +608,8 @@
             });
             bindRemove(row);
             rows.appendChild(fragment);
-            row.querySelector('input, textarea, select')?.focus();
+            row.querySelectorAll('[data-image-upload]').forEach(bindImageUploadPreview);
+            row.querySelector('input:not([type=hidden]), textarea, select')?.focus();
         });
     });
 

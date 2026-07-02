@@ -10,9 +10,7 @@ class GalleryController extends Controller
 {
     public function index(): View
     {
-        $type = in_array(request('type'), ['image', 'video'], true) ? request('type') : null;
-
-        return $this->renderGallery($type);
+        return $this->renderGallery('image');
     }
 
     public function videos(): View
@@ -20,8 +18,10 @@ class GalleryController extends Controller
         return $this->renderGallery('video');
     }
 
-    private function renderGallery(?string $initialType = null): View
+    private function renderGallery(string $initialType): View
     {
+        $initialType = $initialType === 'video' ? 'video' : 'image';
+
         $page = ContentSection::query()
             ->where('page', 'gallery')
             ->where('is_active', true)
@@ -30,6 +30,7 @@ class GalleryController extends Controller
             ->keyBy('section_key');
 
         $items = MediaItem::query()
+            ->where('type', $initialType)
             ->where('is_active', true)
             ->where('show_in_gallery', true)
             ->orderBy('sort_order')

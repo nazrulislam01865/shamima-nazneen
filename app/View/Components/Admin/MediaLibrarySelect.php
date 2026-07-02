@@ -16,15 +16,30 @@ class MediaLibrarySelect extends Component
 
     public ?string $currentUrl;
 
+    public string $typeLabel;
+
+    public string $emptyMessage;
+
     public function __construct(
         public string $name,
-        public string $label = 'Choose from Gallery / Media Library',
+        public string $label = 'Choose from Image Gallery',
         public ?string $currentPath = null,
+        public ?string $currentVideoUrl = null,
         public ?string $help = null,
+        public string $type = 'image',
     ) {
-        $this->items = MediaLibrary::images();
-        $this->selectedId = MediaLibrary::imageIdForPath($currentPath);
-        $this->currentUrl = Media::url($currentPath);
+        $this->type = $type === 'video' ? 'video' : 'image';
+        $this->typeLabel = $this->type === 'video' ? 'video' : 'image';
+        $this->items = MediaLibrary::items($this->type);
+        $this->selectedId = $this->type === 'video'
+            ? MediaLibrary::videoIdForUrl($currentVideoUrl)
+            : MediaLibrary::imageIdForPath($currentPath);
+        $this->currentUrl = $this->type === 'video'
+            ? null
+            : Media::url($currentPath);
+        $this->emptyMessage = $this->type === 'video'
+            ? 'No videos are available yet. Add a YouTube video in Video Gallery first.'
+            : 'No images are available yet. Upload a new image below first.';
     }
 
     public function render(): View|Closure|string

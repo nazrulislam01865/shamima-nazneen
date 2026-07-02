@@ -18,7 +18,7 @@ class SafeUrl implements ValidationRule
         }
 
         if (! is_string($value)) {
-            $fail('The :attribute must be a valid link.');
+            $fail('Enter a valid link. Use a complete website URL, a page path, or a page section.');
 
             return;
         }
@@ -30,7 +30,7 @@ class SafeUrl implements ValidationRule
             && in_array(strtolower((string) parse_url($value, PHP_URL_SCHEME)), ['http', 'https'], true);
 
         if (! $isInternal && ! $isExternal) {
-            $fail('The :attribute must be an internal path, page anchor, or complete HTTP/HTTPS URL.');
+            $fail('Enter a valid link. Use https://example.com, /page-name, or #section.');
         }
     }
 }

@@ -27,7 +27,7 @@ class CustomPageController extends Controller
     public function store(CustomPageRequest $request): RedirectResponse
     {
         $data = $request->validated();
-        $data['slug'] = $this->uniqueSlug($data['slug'] ?: $data['name']);
+        $data['slug'] = $this->uniqueSlug($data['slug'] ?? $data['name']);
         $data['content'] = RichTextSanitizer::clean($data['content']);
         $data['sort_order'] = ((int) CustomPage::query()->max('sort_order')) + 10;
 
@@ -44,7 +44,7 @@ class CustomPageController extends Controller
     public function update(CustomPageRequest $request, CustomPage $customPage): RedirectResponse
     {
         $data = $request->validated();
-        $data['slug'] = $this->uniqueSlug($data['slug'] ?: $data['name'], $customPage->id);
+        $data['slug'] = $this->uniqueSlug($data['slug'] ?? $customPage->slug ?? $data['name'], $customPage->id);
         $data['content'] = RichTextSanitizer::clean($data['content']);
         $customPage->update($data);
 

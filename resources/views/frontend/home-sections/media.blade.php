@@ -17,21 +17,24 @@
                 'title' => $definition['title'],
                 'url' => $social[$key],
                 'description' => $definition['description'],
+                'icon_path' => null,
             ] : null)
             ->filter()
             ->values();
     }
 
-    $profileMarkFor = function (string $title): array {
-        $normalized = strtolower($title);
+    $profileMarkFor = function (?string $title, ?string $url = null): array {
+        $normalized = strtolower(trim(($title ?? '').' '.($url ?? '')));
         return match (true) {
             str_contains($normalized, 'chorki') => ['mark' => 'C', 'class' => 'chorki'],
             str_contains($normalized, 'imdb') => ['mark' => 'IMDb', 'class' => 'imdb'],
             str_contains($normalized, 'wiki') => ['mark' => 'W', 'class' => 'wikipedia'],
-            str_contains($normalized, 'youtube') => ['mark' => '▶', 'class' => 'youtube'],
-            str_contains($normalized, 'facebook') => ['mark' => 'f', 'class' => 'facebook'],
+            str_contains($normalized, 'youtube') || str_contains($normalized, 'youtu.be') => ['mark' => '▶', 'class' => 'youtube'],
+            str_contains($normalized, 'facebook') || str_contains($normalized, 'fb.com') => ['mark' => 'f', 'class' => 'facebook'],
             str_contains($normalized, 'instagram') => ['mark' => '◎', 'class' => 'instagram'],
-            default => ['mark' => mb_strtoupper(mb_substr(trim($title), 0, 1)) ?: '↗', 'class' => 'default'],
+            str_contains($normalized, 'linkedin') => ['mark' => 'in', 'class' => 'linkedin'],
+            str_contains($normalized, 'x.com') || str_contains($normalized, 'twitter') => ['mark' => '𝕏', 'class' => 'x'],
+            default => ['mark' => mb_strtoupper(mb_substr(trim((string) $title), 0, 1)) ?: '↗', 'class' => 'default'],
         };
     };
 @endphp
@@ -54,10 +57,17 @@
                             $profileUrl = $profileLink['url'];
                             $profileIsExternal = \Illuminate\Support\Str::startsWith($profileUrl, ['http://', 'https://']);
                             $profileTitle = $profileLink['title'];
-                            $icon = $profileMarkFor($profileTitle);
+                            $icon = $profileMarkFor($profileTitle, $profileUrl);
+                            $profileIconUrl = \App\Support\Media::url($profileLink['icon_path'] ?? null);
                         @endphp
                         <a class="profile-follow-card profile-follow-card-{{ $icon['class'] }}" href="{{ $profileUrl }}" @if($profileIsExternal) target="_blank" rel="noopener noreferrer" @endif>
-                            <span class="profile-follow-icon" aria-hidden="true">{{ $icon['mark'] }}</span>
+                            <span class="profile-follow-icon {{ $profileIconUrl ? 'has-custom-icon' : '' }}" aria-hidden="true">
+                                @if($profileIconUrl)
+                                    <img src="{{ $profileIconUrl }}" alt="" loading="lazy" data-fallback-text="Profile logo is not available.">
+                                @else
+                                    {{ $icon['mark'] }}
+                                @endif
+                            </span>
                             <span class="profile-follow-copy">
                                 <strong>{{ $profileTitle }}</strong>
                                 @if(filled($profileLink['description'] ?? null))<small>{{ $profileLink['description'] }}</small>@endif
@@ -86,8 +96,8 @@
                             @if($profileItem->type === 'video')<span class="press-play" aria-hidden="true">▶</span>@endif
                         </div>
                         <h3>{{ $profileItem->title }}</h3>
-                        <p>{{ \Illuminate\Support\Str::limit(strip_tags($profileItem->description), 110) ?: ($profileItem->link_name ?: 'Open this public media reference.') }}</p>
-                        <span class="text-link">{{ $profileItem->link_name ?: ($profileItem->type === 'video' ? 'Watch Video →' : 'Open Link →') }}</span>
+                        <p>{{ \Illuminate\Support\Str::limit(strip_tags($profileItem->description ?: $profileItem->link_label ?: 'Open this profile or media feature.'), 120) }}</p>
+                        <span class="text-link">{{ $profileItem->link_label ?: 'Open link' }}</span>
                     </a>
                 @endforeach
             </div>

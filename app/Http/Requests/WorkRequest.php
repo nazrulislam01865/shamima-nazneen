@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\HasFriendlyValidationMessages;
 use App\Rules\MeaningfulRichText;
 use App\Rules\SafeUrl;
 use Illuminate\Foundation\Http\FormRequest;
@@ -10,6 +11,8 @@ use Illuminate\Validation\Validator;
 
 class WorkRequest extends FormRequest
 {
+    use HasFriendlyValidationMessages;
+
     public function authorize(): bool
     {
         return $this->user()?->is_admin === true;
@@ -69,7 +72,7 @@ class WorkRequest extends FormRequest
                     && ! $this->hasFile('image')
                     && ! $this->filled('library_media_id')
                     && (blank($existingImage) || $this->boolean('remove_image'))) {
-                    $validator->errors()->add('image', 'Upload a work image or choose one from Gallery / Media Library.');
+                    $validator->errors()->add('image', 'Upload a work image or choose one from Image Gallery.');
                 }
             },
         ];

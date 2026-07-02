@@ -59,7 +59,7 @@ class WorkController extends Controller
         $data['external_links'] = $this->normaliseLinks($data['external_links'] ?? []);
         $data['link_name'] = $data['external_links'][0]['label'] ?? null;
         $data['link_url'] = $data['external_links'][0]['url'] ?? null;
-        $data['slug'] = $this->uniqueSlug($data['slug'] ?: $data['title']);
+        $data['slug'] = $this->uniqueSlug($data['slug'] ?? $data['title']);
         $data['short_description'] = RichTextSanitizer::clean($data['short_description']);
         $categoryName = WorkCategory::query()->whereKey($data['category_id'])->value('name') ?: 'Works';
         $data['image_path'] = $this->resolveLibraryImage(
@@ -88,7 +88,7 @@ class WorkController extends Controller
         $data['external_links'] = $this->normaliseLinks($data['external_links'] ?? []);
         $data['link_name'] = $data['external_links'][0]['label'] ?? null;
         $data['link_url'] = $data['external_links'][0]['url'] ?? null;
-        $data['slug'] = $this->uniqueSlug($data['slug'] ?: $data['title'], $work->id);
+        $data['slug'] = $this->uniqueSlug($data['slug'] ?? $work->slug ?? $data['title'], $work->id);
         $data['short_description'] = RichTextSanitizer::clean($data['short_description']);
         $categoryName = WorkCategory::query()->whereKey($data['category_id'])->value('name') ?: 'Works';
         $data['image_path'] = $this->resolveLibraryImage(
