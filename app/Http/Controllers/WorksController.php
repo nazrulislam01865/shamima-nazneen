@@ -36,6 +36,7 @@ class WorksController extends Controller
 
         $activeCategory = $categories->firstWhere('slug', $requestedCategory)?->slug;
         $decades = $works
+            ->whereNotNull('year')
             ->map(fn (Work $work): string => ((int) floor($work->year / 10) * 10).'s')
             ->unique()
             ->sortDesc()

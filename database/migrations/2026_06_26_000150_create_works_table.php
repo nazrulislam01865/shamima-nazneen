@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('category_id')->constrained('work_categories')->cascadeOnUpdate()->restrictOnDelete();
             $table->string('title');
             $table->string('slug')->unique();
-            $table->unsignedSmallInteger('year');
+            $table->unsignedSmallInteger('year')->nullable();
             $table->string('credit')->nullable();
             $table->string('role')->nullable();
             $table->string('platform')->nullable();

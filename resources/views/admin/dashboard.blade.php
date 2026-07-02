@@ -56,7 +56,7 @@
                 @foreach($recentWorks as $work)
                     <a href="{{ route('admin.works.edit', $work) }}" style="display:flex;gap:12px;align-items:center;text-decoration:none;padding-bottom:12px;border-bottom:1px solid #eeeae2">
                         @if($work->image_url)<img src="{{ $work->image_url }}" alt="" style="width:62px;height:46px;object-fit:cover;border-radius:8px">@endif
-                        <span><strong style="display:block;font-size:13px">{{ $work->title }}</strong><small style="color:#71736b">{{ $work->category?->name }} · {{ $work->year }}</small></span>
+                        <span><strong style="display:block;font-size:13px">{{ $work->title }}</strong><small style="color:#71736b">{{ collect([$work->category?->name, $work->year])->filter()->join(' · ') ?: 'Work entry' }}</small></span>
                     </a>
                 @endforeach
             </div>

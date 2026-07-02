@@ -5,7 +5,7 @@
 <button class="{{ $buttonClass }} work-detail-trigger"
         type="button"
         data-title="{{ $work->title }}"
-        data-year="{{ $work->year }}"
+        data-year="{{ $work->year ?: '' }}"
         data-type="{{ $work->category->name }}"
         data-credit="{{ $work->credit }}"
         data-role="{{ $work->role }}"

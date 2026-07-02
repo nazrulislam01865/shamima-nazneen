@@ -53,7 +53,7 @@
 <tr data-sortable-item data-id="{{ $work->id }}">
     <td class="move-cell"><x-admin.sort-handle :label="'Move work '.$work->title" /></td>
     <td><div class="table-title">@if($work->image_url)<img src="{{ $work->image_url }}" alt="">@endif<div><strong>{{ $work->title }}</strong><small>{{ $work->role ?: $work->credit ?: \Illuminate\Support\Str::limit(strip_tags($work->short_description), 55) }}</small></div></div></td>
-    <td>{{ $work->category?->name }}</td><td><strong>{{ $work->year }}</strong></td><td><x-admin.status :active="$work->show_on_home" true-label="Shown" false-label="Not shown" /></td><td><x-admin.status :active="$work->is_active" /></td>
+    <td>{{ $work->category?->name }}</td><td><strong>{{ $work->year ?: '—' }}</strong></td><td><x-admin.status :active="$work->show_on_home" true-label="Shown" false-label="Not shown" /></td><td><x-admin.status :active="$work->is_active" /></td>
     <td><div class="table-actions"><a class="admin-button secondary small" href="{{ route('admin.works.edit', array_filter(['work' => $work, 'home' => $homeOnly ? 1 : null])) }}">Edit</a><form action="{{ route('admin.works.destroy', $work) }}" method="POST" data-confirm-delete="Delete this work permanently?">@csrf @method('DELETE')<button class="admin-button danger small" type="submit">Delete</button></form></div></td>
 </tr>
 @endforeach</tbody>

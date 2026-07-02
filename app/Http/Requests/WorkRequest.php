@@ -44,7 +44,7 @@ class WorkRequest extends FormRequest
             'category_id' => ['required', Rule::exists('work_categories', 'id')],
             'title' => ['required', 'string', 'max:255'],
             'slug' => ['nullable', 'string', 'max:255'],
-            'year' => ['required', 'integer', 'digits:4', 'min:1900', 'max:'.(date('Y') + 5)],
+            'year' => ['nullable', 'integer', 'digits:4', 'min:1900', 'max:'.(date('Y') + 5)],
             'credit' => ['nullable', 'string', 'max:160'],
             'role' => ['nullable', 'string', 'max:160'],
             'platform' => ['nullable', 'string', 'max:160'],

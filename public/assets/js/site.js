@@ -415,6 +415,9 @@
         rows.sort((a, b) => {
           if (mode === 'az') return (a.dataset.title || '').localeCompare(b.dataset.title || '');
           if (mode === 'category') return (a.dataset.type || '').localeCompare(b.dataset.type || '');
+          const aHasYear = Boolean(a.dataset.year);
+          const bHasYear = Boolean(b.dataset.year);
+          if (aHasYear !== bHasYear) return aHasYear ? -1 : 1;
           const aYear = Number(a.dataset.year || 0);
           const bYear = Number(b.dataset.year || 0);
           return mode === 'oldest' ? aYear - bYear : bYear - aYear;

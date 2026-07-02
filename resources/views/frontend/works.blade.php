@@ -63,7 +63,7 @@
                     <div class="featured-grid">
                         @foreach($featuredWorks as $work)
                             @php
-                                $decade = ((int) floor($work->year / 10) * 10).'s';
+                                $decade = $work->year ? ((int) floor($work->year / 10) * 10).'s' : '';
                             @endphp
                             <article class="featured-work"
                                      data-type="{{ $work->category->name }}"
@@ -81,7 +81,7 @@
                                     @endif
                                 </div>
                                 <div class="featured-body">
-                                    <div class="work-meta"><span class="badge dark">{{ $work->category->name }}</span><span class="badge">{{ $work->year }}</span></div>
+                                    <div class="work-meta"><span class="badge dark">{{ $work->category->name }}</span>@if($work->year)<span class="badge">{{ $work->year }}</span>@endif</div>
                                     <h3>{{ $work->title }}</h3>
                                     @if($work->credit)<p><strong>Credit:</strong> {{ $work->credit }}</p>@endif
                                     <p>{{ \Illuminate\Support\Str::limit(strip_tags($work->short_description), 145) }}</p>
@@ -118,7 +118,7 @@
                             <div class="credit-list">
                                 @foreach($categoryWorks as $work)
                                     @php
-                                        $decade = ((int) floor($work->year / 10) * 10).'s';
+                                        $decade = $work->year ? ((int) floor($work->year / 10) * 10).'s' : '';
                                     @endphp
                                     <div class="credit-row"
                                          data-type="{{ $category->name }}"
@@ -128,7 +128,7 @@
                                          data-title="{{ mb_strtolower($work->title) }}"
                                          data-credit="{{ mb_strtolower($work->credit ?? '') }}"
                                          data-platform="{{ mb_strtolower($work->platform ?? '') }}">
-                                        <div class="credit-year">{{ $work->year }}</div>
+                                        <div class="credit-year">{{ $work->year ?: '—' }}</div>
                                         <div class="credit-title">
                                             <h3>{{ $work->title }}</h3>
                                             <p>{{ \Illuminate\Support\Str::limit(strip_tags($work->short_description), 135) }}</p>

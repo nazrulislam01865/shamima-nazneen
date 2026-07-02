@@ -17,7 +17,7 @@
                             <?php endif; ?>
                         </div>
                         <div class="film-content">
-                            <div class="film-year"><?php echo e($work->year); ?></div>
+                            <?php if($work->year): ?><div class="film-year"><?php echo e($work->year); ?></div><?php endif; ?>
                             <h3><?php echo e($work->title); ?></h3>
                             <p><?php echo e(\Illuminate\Support\Str::limit(strip_tags($work->short_description), 90)); ?></p>
                             <?php echo $__env->make('frontend.partials.work-detail-button', [

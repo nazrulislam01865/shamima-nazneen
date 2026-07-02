@@ -17,7 +17,7 @@
                             @endif
                         </div>
                         <div class="film-content">
-                            <div class="film-year">{{ $work->year }}</div>
+                            @if($work->year)<div class="film-year">{{ $work->year }}</div>@endif
                             <h3>{{ $work->title }}</h3>
                             <p>{{ \Illuminate\Support\Str::limit(strip_tags($work->short_description), 90) }}</p>
                             @include('frontend.partials.work-detail-button', [

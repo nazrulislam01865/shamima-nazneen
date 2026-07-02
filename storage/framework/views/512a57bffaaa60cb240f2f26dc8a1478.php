@@ -5,7 +5,7 @@
 <button class="<?php echo e($buttonClass); ?> work-detail-trigger"
         type="button"
         data-title="<?php echo e($work->title); ?>"
-        data-year="<?php echo e($work->year); ?>"
+        data-year="<?php echo e($work->year ?: ''); ?>"
         data-type="<?php echo e($work->category->name); ?>"
         data-credit="<?php echo e($work->credit); ?>"
         data-role="<?php echo e($work->role); ?>"

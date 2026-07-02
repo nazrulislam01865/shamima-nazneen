@@ -9,11 +9,11 @@
     }
 @endphp
 <section class="form-section">
-    <div class="form-section-heading"><h2>Work information</h2><p>The year is required and is shown publicly instead of “To Be Added”.</p></div>
+    <div class="form-section-heading"><h2>Work information</h2><p>The production year is optional. Add it when the verified year is available.</p></div>
     <div class="form-grid three">
         <x-admin.select name="category_id" label="Work category" :options="$categories->pluck('name','id')->all()" :value="$record?->category_id" required />
         <x-admin.input name="title" label="Work name" :value="$record?->title" required placeholder="Enter the film, drama, theatre, or project name" />
-        <x-admin.input name="year" label="Release / production year" type="number" :value="$record?->year" required min="1900" :max="date('Y') + 5" placeholder="2024" />
+        <x-admin.input name="year" label="Release / production year" type="number" :value="$record?->year" min="1900" :max="date('Y') + 5" placeholder="2024" help="Optional. Leave it blank if the production year is not confirmed yet." />
         <x-admin.input name="credit" label="Credit" :value="$record?->credit" placeholder="Actor, Director, Guest appearance" />
         <x-admin.input name="role" label="Character / role" :value="$record?->role" placeholder="Example: Lead character, Guest artist" />
         <x-admin.input name="platform" label="Channel / platform" :value="$record?->platform" placeholder="BTV, YouTube, Chorki..." />
